@@ -1,0 +1,10 @@
+TODO board.py:
+- Implement support for "Fler Avgångar".    Done
+- Implement support for any hpl.            Done
+- error.log only three latest errors.       Done
+- Try to remove all char enc/dec            Done
+- Move Temp forecast to own module          
+- Fixa Vagnläge...                          
+- Do a GUI                                   
+- Get a github account and upload the code. 
+- Improved fault handling (low prio)        
