@@ -3,7 +3,8 @@ TODO board.py:
 - Implement support for any hpl.            Done
 - error.log only three latest errors.       Done
 - Try to remove all char enc/dec            Done
-- Move Temp forecast to own module          
+- Move Temp forecast to own module          Done
+- Fix print alignment for temp forecast     
 - Fixa Vagnläge...                          
 - Do a GUI                                   
 - Get a github account and upload the code. Done
