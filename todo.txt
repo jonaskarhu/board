@@ -6,5 +6,5 @@ TODO board.py:
 - Move Temp forecast to own module          
 - Fixa Vagnläge...                          
 - Do a GUI                                   
-- Get a github account and upload the code. 
+- Get a github account and upload the code. Done
 - Improved fault handling (low prio)        

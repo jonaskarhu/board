@@ -40,7 +40,7 @@ def pr(val, colwidth):
 # Soluppgång: 06:15, Solnedgång: 18:25
 def print_table(stop, curr_time, line_tuple, date, curr_temp,\
                 prognosis, min_t, max_t, wind, cd, rain,\
-                sun_up, sun_down):
+                sun_up, sun_down, temp_per_hour):
     bus_stop = "Hållplats: " + stop
     time     = "Kl: " + curr_time
     space1   = " " * (widthInTotal -\
@@ -71,3 +71,12 @@ def print_table(stop, curr_time, line_tuple, date, curr_temp,\
                                                              wind, cd))
     print("Nederbörd: {} mm".format(rain))
     print("Soluppgång: {}, Solnedgång: {}".format(sun_up, sun_down))
+    print("[kl]  {}     {}     {}".format(temp_per_hour[0][0],
+                                          temp_per_hour[1][0],
+                                          temp_per_hour[2][0]))
+    print("[°C]  {}({})     {}({})     {}({})".format(temp_per_hour[0][1],
+                                                      temp_per_hour[0][2],
+                                                      temp_per_hour[1][1],
+                                                      temp_per_hour[1][2],
+                                                      temp_per_hour[2][1],
+                                                      temp_per_hour[2][2]))

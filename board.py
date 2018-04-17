@@ -6,20 +6,14 @@ import requests
 import codecs
 import bus_stop_parser
 import weather_parser
+import prognosis_parser
 import printer
 import time
 import sys
 import traceback
 import custom_exception
-from urllib.parse import unquote_plus
 import re
 import os.path
-
-def mean(numbers):
-    integers = []
-    for n in numbers:
-        integers.append(int(n))
-    return round(float(sum(integers)) / max(len(integers), 1), 1)
 
 def replace_utf8_chars(s):
     return s.replace('%c3%a5','å')\
@@ -102,47 +96,23 @@ def main(bus_stop):
              wind, cd, rain) = weather_parser.get_prognosis(
                                  prognosis_page.text)
 
-            # Print board and sleep
-            printer.print_table(stop, curr_time, print_tuple, date, temp,
-                                prog, min_temp, max_temp, wind, cd, rain,
-                                sun_up, sun_down)
-
             rain_url = 'https://www.klart.se/se/'\
                        'v%C3%A4stra-g%C3%B6talands-l%C3%A4n/'\
                        'v%C3%A4der-g%C3%B6teborg/timmar/'
             rain_page = get_page_as_string(rain_url)
 
-            # Check if there is another page
-            time_pattern = 'data-qa-id="hour-day-hour" ' +\
-                           'aria-label="Klockan">(.*):00\s?</time>'
-            temp_pattern = '<td class="col -temp">\s*([-0-9]+).*\s*<\/td>'
-            feel_pattern = '<td class="col -feelsLike">\s*([-0-9]+).*\s*<\/td>'
-            res = re.findall(temp_pattern +
-                             '\s*' +
-                             feel_pattern,
-                             rain_page)
-            times = re.findall(time_pattern,
-                               rain_page)
+            temp_per_hour = prognosis_parser.get_temps_per_hour(rain_page)
 
-            t = []
-            for tim in times:
-                t.append(tim.replace(' ', ''))
-            degree_sign = u'\xb0'
-            t_span = 6
-            for i in range(0, 3):
-                n = i * t_span
-                print(u"{}-{}: Temp: {}{}C, Känns som: {}{}C".format(
-                      t[n], t[n + 6],
-                      str(mean([res[n][0], res[n+1][0], res[n+2][0],
-                                res[n+3][0], res[n+4][0], res[n+5][0]])),
-                      degree_sign,
-                      str(mean([res[n][1], res[n+1][1], res[n+2][1],
-                                res[n+3][1], res[n+4][1], res[n+5][1]])),
-                      degree_sign))
+            # Print board and sleep
+            printer.print_table(stop, curr_time, print_tuple, date, temp,
+                                prog, min_temp, max_temp, wind, cd, rain,
+                                sun_up, sun_down, temp_per_hour)
             #break
             time.sleep(update_interval)
+
         except KeyboardInterrupt:
             break
+
         except:
             log_file_path = get_logfile(no_of_errors_logged,
                                         no_of_errors_to_save)
