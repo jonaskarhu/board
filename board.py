@@ -1,60 +1,21 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
+# Parse cli input
 import argparse
-import requests
-import codecs
+
+# Import other modules
+import page_getter
 import bus_stop_parser
 import weather_parser
-import prognosis_parser
 import printer
+import custom_exception
+
+# Misc system imports
 import time
 import sys
 import traceback
-import custom_exception
-import re
 import os.path
-
-def replace_utf8_chars(s):
-    return s.replace('%c3%a5','å')\
-            .replace('%c3%a4','ä')\
-            .replace('%c3%b6','ö')\
-            .replace('%c3%85','Å')\
-            .replace('%c3%84','Ä')\
-            .replace('%c3%96','Ö')\
-            .replace('%c3%a9','é')\
-            .replace('%c3%a6','æ')\
-            .replace('+',' ')
-
-def get_page_as_string(url):
-    page_obj = requests.get(url)
-    unicode_str = page_obj.text
-    return replace_utf8_chars(unicode_str)
-
-def get_bus_stop_page(bus_stop):
-    return get_bus_stop_page_help(bus_stop, 1, "")
-
-def get_bus_stop_page_help(bus_stop, page_no, page_acc):
-    # Get the page of the bus stop that is requested
-    url = "http://wap.vasttrafik.se/MobileQuery.aspx?hpl=" +\
-          bus_stop +\
-          "+(Göteborg)&pg=" + str(page_no) + "&lang=sv"
-    page = get_page_as_string(url)
-
-    # Check if there is another page
-    #page = unquote_plus(utf8string)
-    res = re.findall('Fler avg', page)
-
-    # Return or loop
-    if res == []:
-        # If there are no more pages, return the appended string
-        return page_acc + page
-    else:
-        # If there is another page, recursively loop and append
-        return get_bus_stop_page_help(bus_stop, page_no + 1, page_acc + page)
-
-url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
-url_prognosis = "https://www.klart.se/se/västra-götalands-län/väder-göteborg/"
 
 def get_logfile(no_of_errors_logged, no_of_errors_to_save):
     if no_of_errors_logged >= no_of_errors_to_save:
@@ -65,6 +26,12 @@ def get_logfile(no_of_errors_logged, no_of_errors_to_save):
         if os.path.exists(error_log_to_remove):
             os.remove(error_log_to_remove)
     return "error_" + str(no_of_errors_logged + 1) + ".log"
+
+# urls
+url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
+url_prognosis = "https://www.klart.se/se/västra-götalands-län/väder-göteborg/"
+url_hr_by_hr = "https://www.klart.se/se/v%C3%A4stra-g%C3%B6talands-l%C3%A4n/"\
+               "v%C3%A4der-g%C3%B6teborg/timmar/"
 
 # Main start
 def main(bus_stop):
@@ -77,31 +44,26 @@ def main(bus_stop):
         # log the fault to an error.log file and
         # backoff for an increasing amount of time
         try:
-            page = get_bus_stop_page(bus_stop)
-
             # Get bus information
+            bus_stop_page = page_getter.get_bus_stop_page(bus_stop)
             (stop,
              curr_time,
-             print_tuple) = bus_stop_parser.get_print_tuple(page)
+             print_tuple) = bus_stop_parser.get_print_tuple(bus_stop_page)
 
             # Get actual temperature
-            weather_page = requests.get(url_temp)
-            temp = weather_parser.get_curr_temp(weather_page.text)
+            weather_page = page_getter.get_page_as_string(url_temp)
+            temp = weather_parser.get_curr_temp(weather_page)
 
             # Get weather prognosis
-            prognosis_page = requests.get(url_prognosis)
+            prognosis_page = page_getter.get_page_as_string(url_prognosis)
             (date, prog,
              sun_up, sun_down,
              min_temp, max_temp,
-             wind, cd, rain) = weather_parser.get_prognosis(
-                                 prognosis_page.text)
+             wind, cd, rain) = weather_parser.get_prognosis(prognosis_page)
 
-            rain_url = 'https://www.klart.se/se/'\
-                       'v%C3%A4stra-g%C3%B6talands-l%C3%A4n/'\
-                       'v%C3%A4der-g%C3%B6teborg/timmar/'
-            rain_page = get_page_as_string(rain_url)
-
-            temp_per_hour = prognosis_parser.get_temps_per_hour(rain_page)
+            # Get hour by hour temperature prognosis
+            hr_by_hr_page = page_getter.get_page_as_string(url_hr_by_hr)
+            temp_per_hour = weather_parser.get_temps_per_hour(hr_by_hr_page)
 
             # Print board and sleep
             printer.print_table(stop, curr_time, print_tuple, date, temp,
@@ -123,12 +85,12 @@ def main(bus_stop):
             print("logged error to file:", log_file_path)
             log_file.write(traceback.format_exc())
             try:
-                page
+                bus_stop_page
             except:
                 pass
             else:
                 log_file.write("Web page that caused the error:\n" +
-                               page + "\n\n")
+                               bus_stop_page + "\n\n")
             log_file.close()
             no_of_errors_logged += 1
 
