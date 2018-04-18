@@ -1,11 +1,11 @@
 TODO board.py:
-- Implement support for "Fler AvgÂngar".    Done
+- Implement support for "Fler Avg√•ngar".    Done
 - Implement support for any hpl.            Done
 - error.log only three latest errors.       Done
 - Try to remove all char enc/dec            Done
 - Move Temp forecast to own module          Done
-- Fix print alignment for temp forecast     
-- Fixa Vagnl‰ge...                          
-- Do a GUI                                   
+- Fix print alignment for temp forecast     Done
+- Fixa Vagnl√§ge...
+- Do a GUI
 - Get a github account and upload the code. Done
-- Improved fault handling (low prio)        
+- Improved fault handling (low prio)

@@ -71,12 +71,13 @@ def print_table(stop, curr_time, line_tuple, date, curr_temp,\
                                                              wind, cd))
     print("Nederbörd: {} mm".format(rain))
     print("Soluppgång: {}, Solnedgång: {}".format(sun_up, sun_down))
-    print("[kl]  {}     {}     {}".format(temp_per_hour[0][0],
-                                          temp_per_hour[1][0],
-                                          temp_per_hour[2][0]))
-    print("[°C]  {}({})     {}({})     {}({})".format(temp_per_hour[0][1],
-                                                      temp_per_hour[0][2],
-                                                      temp_per_hour[1][1],
-                                                      temp_per_hour[1][2],
-                                                      temp_per_hour[2][1],
-                                                      temp_per_hour[2][2]))
+    print("{}{}{}{}".format(
+            pr("[kl]", 6),
+            pr(temp_per_hour[0][0], 10),
+            pr(temp_per_hour[1][0], 10),
+            pr(temp_per_hour[2][0], 10)))
+    print("{}{}{}{}".format(
+            pr("[°C]", 6),
+            pr(temp_per_hour[0][1] + "(" + temp_per_hour[0][2] + ")", 10),
+            pr(temp_per_hour[1][1] + "(" + temp_per_hour[1][2] + ")", 10),
+            pr(temp_per_hour[2][1] + "(" + temp_per_hour[2][2] + ")", 10)))
