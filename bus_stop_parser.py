@@ -33,7 +33,7 @@ def get_print_tuple(page):
         '<td(?: class="s4")?>' + '[R\s]'          + '<\/td>' # R or space
         '<td class="s3">'      + time_pattern     + '</td>', # time2
         page)
-    print_tuple = [(t + (bus_stop_pos.get_pos(t[1], stop),)) for t in full_list]
+    print_tuple = [(t + (bus_stop_pos.get_pos(stop, t[0], t[1]),)) for t in full_list]
 
     # Get Time
     times = re.findall('([0-9]{1,2}:[0-9]{2}( )[A|P]{1}M)', page)

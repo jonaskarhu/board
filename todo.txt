@@ -6,6 +6,7 @@ TODO board.py:
 - Move Temp forecast to own module          Done
 - Fix print alignment for temp forecast     Done
 - Fixa Vagnläge...
-- Do a GUI
+- Do a GUI                                  Done
+- Fix error handling in GUI, i.e. Error log Done
 - Get a github account and upload the code. Done
 - Improved fault handling (low prio)
