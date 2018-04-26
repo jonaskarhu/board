@@ -208,6 +208,9 @@ class Mainframe(tk.Frame):
 
     # Loop that fetches all fields that continuously shall be updated
     def Update(self):
+        global no_of_errors_logged
+        self.ErrorIndicator.set('!')
+        self.update_idletasks()
         result = self.getPrintTupleForGui(the_bus_stop)
         if result == None:
             # If there is an exception, 'None' will be returned and it needs to
@@ -223,6 +226,9 @@ class Mainframe(tk.Frame):
             else:
                 self.BusStop.set('Hållplats: ' + bus_stop)
                 self.CurrTime.set('Kl: ' + curr_time)
+                self.ErrorIndicator.set('')
+                if no_of_errors_logged > 0:
+                    self.NrOfErrorsLogged.set(str(no_of_errors_logged))
                 self.UpdateFields(print_tuple)
                 self.after(self.TimerInterval, self.Update)
 
@@ -233,7 +239,6 @@ class Mainframe(tk.Frame):
     def getPrintTupleForGui(self, bus_stop):
         global no_of_errors_logged
         global backoff_factor
-        global test
         try:
             bus_stop_page = page_getter.get_bus_stop_page(bus_stop)
             (stop,
@@ -246,7 +251,6 @@ class Mainframe(tk.Frame):
                 for t in print_tuple_temp: print_tuple.append(t[0:4])
             else:                          print_tuple = print_tuple_temp
             backoff_factor = 1
-            self.ErrorIndicator.set('') # indicate up and running again
             return (stop, curr_time, print_tuple)
         except KeyboardInterrupt:
             raise
@@ -272,7 +276,6 @@ class Mainframe(tk.Frame):
                                bus_stop_page + "\n\n")
             log_file.close()
             no_of_errors_logged += 1
-            self.NrOfErrorsLogged.set(no_of_errors_logged)
             backoff_time = backoff_factor * update_interval
             if backoff_factor < 4:
                 backoff_factor *= 2
