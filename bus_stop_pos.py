@@ -23,6 +23,7 @@ def get_pos(stop, no, dest):
         elif dest == 'Länsmansgården':  return b
         elif dest == 'Linnéplatsen':    return b
         elif dest == 'Heden':           return b
+        elif (dest == 'Extrabuss') and (no == '25'): return b
         else:                           return x
     # elif stop == 'Brunnsparken':
         # if   dest == 'Östra Sjukhuset': return d # 1

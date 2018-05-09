@@ -157,7 +157,7 @@ class Mainframe(tk.Frame):
                                              image = self.img,
                                              bg = bg_color)
                     self.imgLabel.grid(row=0, column=col, sticky="w",
-                                       padx=(text_size*0.25, text_size*0.25),
+                                       padx=(text_size*0.40, text_size*0.40),
                                        pady=(text_size*0.25, text_size*0.25))
                     self.imgLabel.image = self.img
                     self.LineFrame.grid_columnconfigure(col, weight = 0)
@@ -194,16 +194,20 @@ class Mainframe(tk.Frame):
         line = 0
         for tup in print_tuple:
             col = 0
+            prev_elem = ''
             for elem in tup:
                 if col == 0:
                     self.img = createPhotoImage(elem + '.png')
                     self.vars[line][col].configure(image = self.img)
                     self.vars[line][col].image = self.img
                 elif col == 1:
-                    self.vars[line][col].set(' ' + elem)
+                    if (elem == 'Extrabuss') and (prev_elem == '25'):
+                        elem = elem + ' Linnéplatsen'
+                    self.vars[line][col].set(elem)
                 else:
                     self.vars[line][col].set(elem)
                 col += 1
+                prev_elem = elem
             line += 1
 
     # Loop that fetches all fields that continuously shall be updated
