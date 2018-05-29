@@ -3,6 +3,8 @@
 
 import requests
 import re
+import urllib.request
+import json
 
 def replace_utf8_chars(s):
     return s.replace('%c3%a5','å')\
@@ -42,3 +44,16 @@ def get_bus_stop_page_help(bus_stop, page_no, page_acc):
     else:
         # If there is another page, recursively loop and append
         return get_bus_stop_page_help(bus_stop, page_no + 1, page_acc + page)
+
+def get_smhi_weather():
+    base_url = 'https://opendata-download-metfcst.smhi.se/'
+    api = 'api/category/pmp3g/version/2/'   # API version
+    geo = 'geotype/point/'                  # Point or Grid
+    lon = 'lon/11.934536/';                 # Longitude
+    lat = 'lat/57.690638/';                 # Latitude
+    fmt = 'data.json';                      # Response Format (json, xml, csv)
+    url = base_url+api+geo+lon+lat+fmt
+    req = urllib.request.Request(url)
+    res = urllib.request.urlopen(req).read()
+    content = json.loads(res.decode('utf-8'))
+    return content
