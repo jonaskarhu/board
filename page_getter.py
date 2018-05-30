@@ -3,8 +3,7 @@
 
 import requests
 import re
-import urllib.request
-import json
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 def replace_utf8_chars(s):
     return s.replace('%c3%a5','å')\
@@ -53,7 +52,8 @@ def get_smhi_weather():
     lat = 'lat/57.690638/';                 # Latitude
     fmt = 'data.json';                      # Response Format (json, xml, csv)
     url = base_url+api+geo+lon+lat+fmt
-    req = urllib.request.Request(url)
-    res = urllib.request.urlopen(req).read()
-    content = json.loads(res.decode('utf-8'))
-    return content
+
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+    # verify=False since SMHI's API does not have correct ssl settings
+    res = requests.get(url, verify=False)
+    return res.json()

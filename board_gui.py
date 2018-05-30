@@ -330,8 +330,7 @@ class Mainframe(tk.Frame):
                                         bg = background_grey,
                                         foreground = text_color_off_white,
                                         textvariable = self.sun_down)
-                
-                
+
                 self.Head.grid(       row=0, column=0, sticky="w")
                 self.sun_1Label.grid( row=0, column=1, sticky="e",
                                       padx=(1*text_size, 0))
@@ -344,7 +343,7 @@ class Mainframe(tk.Frame):
                 self.WeatherFrame.grid_columnconfigure(2, weight=0)
                 self.WeatherFrame.grid_columnconfigure(3, weight=0)
                 self.WeatherFrame.grid_columnconfigure(4, weight=0)
-                
+
                 dark_labels.append(self.Head)
                 dark_labels.append(self.sun_1Label)
                 dark_labels.append(self.SunUp)
@@ -427,7 +426,7 @@ class Mainframe(tk.Frame):
         self.light_frames = light_frames
         self.light_labels = light_labels
         self.red_labels = red_labels
-        self.night_mode = True
+        self.night_mode = False
         self.daytime = True
 
         # Set update interval and go in to the Update loop
@@ -443,12 +442,17 @@ class Mainframe(tk.Frame):
         global forecast_hours
         json_content = page_getter.get_smhi_weather()
         now = datetime.datetime.now()
-
+        this_hour = now.hour
         smhi_tuple = []
+        found_first = False
         for item in json_content['timeSeries']:
             prognosis_time = item['validTime']
             prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0])
-            if (len(smhi_tuple) < forecast_hours) and (prognosis_hr > now.hour):
+            if (len(smhi_tuple) < forecast_hours) and\
+               ((prognosis_hr > this_hour) or\
+                ((this_hour == 23) and (prognosis_hr == 0)) or\
+                found_first):
+                found_first = True
                 for para in item['parameters']:
                     if para['name'] == 'Wsymb2':
                         wsymb = para['values'][0]
@@ -503,6 +507,8 @@ class Mainframe(tk.Frame):
             wind = ''
             for elem in tup:
                 if col == 0:
+                    if len(elem) < 2:
+                        elem = '0' + elem
                     self.wvars[col][line].set('kl ' + elem)
                 elif col == 1:
                     self.img = createPhotoImage('weather_icons/' + elem + '.png')
@@ -525,6 +531,7 @@ class Mainframe(tk.Frame):
         daytime = self.DayTime()
         if (not daytime) and (not self.night_mode):
             # Enable Night Mode
+            print('Enable night mode')
             self.master.config(background = background_grey_night)
             for frame in self.dark_frames:
                 frame.config(bg = background_grey_night)
@@ -542,6 +549,7 @@ class Mainframe(tk.Frame):
             self.night_mode = True
         elif daytime and self.night_mode:
             # Disable Night Mode
+            print('Disable night mode')
             self.master.config(background = background_grey)
             for frame in self.dark_frames:
                 frame.config(bg = background_grey)
@@ -558,33 +566,39 @@ class Mainframe(tk.Frame):
                              foreground = text_color_ferrari_red)
             self.night_mode = False
         else:
+            print('Do nothing')
             pass
 
     def DayTime(self):
         url_prognosis = "https://www.klart.se/se/västra-götalands-län/väder-göteborg/"
-        prognosis_page = page_getter.get_page_as_string(url_prognosis)
-        if prognosis_page == None:
-            return self.daytime
-        else:
-            (date, prog, sun_up, sun_down, min_temp, max_temp,
-             wind, cd, rain) = weather_parser.get_prognosis(prognosis_page)
-
-            now = datetime.datetime.now()
-            time = str(now.hour) + ':' + str(now.minute)
-            self.sun_up.set('↑' + sun_up)
-            self.sun_down.set('↓' + sun_down)
-
-            if (time < sun_down < sun_up) or (sun_down < sun_up <= time):
-                # sun down is after midnight
-                self.daytime = True
-                return True
-            elif (sun_up <= time < sun_down):
-                # sun down is before midnight
-                self.daytime = True
-                return True
+        try:
+            prognosis_page = page_getter.get_page_as_string(url_prognosis)
+            if prognosis_page == None:
+                return self.daytime
             else:
-                self.daytime = False
-                return False
+                (date, prog, sun_up, sun_down, min_temp, max_temp,
+                 wind, cd, rain) = weather_parser.get_prognosis(prognosis_page)
+
+                now = datetime.datetime.now()
+                time = str(now.hour) + ':' + str(now.minute)
+                self.sun_up.set('↑' + sun_up)
+                self.sun_down.set('↓' + sun_down)
+
+                if (time < sun_down < sun_up) or (sun_down < sun_up <= time):
+                    # sun down is after midnight
+                    self.daytime = True
+                    return True
+                elif (sun_up <= time < sun_down):
+                    # sun down is before midnight
+                    self.daytime = True
+                    return True
+                else:
+                    self.daytime = False
+                    return False
+        except KeyboardInterrupt:
+            raise
+        except:
+            return self.daytime
 
     # Loop that fetches all fields that continuously shall be updated
     def Update(self):
@@ -596,22 +610,32 @@ class Mainframe(tk.Frame):
         # Update Weather (less often than the bus info)
         delay_factor = math.ceil(self.WeatherInterval/self.TimerInterval)
         if (delay_factor <= self.WeatherDelay) or self.WeatherDelay == 0:
-            # Update Temperature
-            temperature = self.GetCurrentTemp()
-            if temperature == None:
-                # TODO: Raise some kind of flag in case we don't get curr temp
-                pass
-            else:
-                self.CurrentTemp = temperature
+            try:
+                # Update Temperature
+                temperature = self.GetCurrentTemp()
+                if temperature == None:
+                    # TODO: Raise some kind of flag in case we don't get curr temp
+                    pass
+                else:
+                    self.CurrentTemp = temperature
+            except KeyboardInterrupt:
+                raise
+            except:
+                self.HandleException(temperature)
 
-            # Update Weather Forecast
-            smhi_tuple = self.GetWeather()
-            if smhi_tuple == None:
-                # TODO: Raise some kind of flag in case we don't get curr temp
-                pass
-            else:
-                self.UpdateWeather(smhi_tuple)
-            self.WeatherDelay = 1
+            try:
+                # Update Weather Forecast
+                smhi_tuple = self.GetWeather()
+                if smhi_tuple == None:
+                    # TODO: Raise some kind of flag in case we don't get forecast
+                    pass
+                else:
+                    self.UpdateWeather(smhi_tuple)
+                self.WeatherDelay = 1
+            except KeyboardInterrupt:
+                raise
+            except:
+                self.HandleException(smhi_tuple)
         else:
             self.WeatherDelay += 1
 
