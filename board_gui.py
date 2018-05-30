@@ -30,8 +30,8 @@ background_grey_night  = "#000000"
 lighter_grey_night     = "#202020"
 text_color_night       = "#A4A4A4"
 text_font              = 'DejaVu Sans'
-text_size              = 18
-text_size_weather      = 12
+text_size              = 24
+text_size_weather      = 18
 screen_res             = '1400x900'
 
 ## Global settings
@@ -330,7 +330,6 @@ class Mainframe(tk.Frame):
                                         bg = background_grey,
                                         foreground = text_color_off_white,
                                         textvariable = self.sun_down)
-
                 self.Head.grid(       row=0, column=0, sticky="w")
                 self.sun_1Label.grid( row=0, column=1, sticky="e",
                                       padx=(1*text_size, 0))
@@ -343,7 +342,6 @@ class Mainframe(tk.Frame):
                 self.WeatherFrame.grid_columnconfigure(2, weight=0)
                 self.WeatherFrame.grid_columnconfigure(3, weight=0)
                 self.WeatherFrame.grid_columnconfigure(4, weight=0)
-
                 dark_labels.append(self.Head)
                 dark_labels.append(self.sun_1Label)
                 dark_labels.append(self.SunUp)
@@ -531,7 +529,6 @@ class Mainframe(tk.Frame):
         daytime = self.DayTime()
         if (not daytime) and (not self.night_mode):
             # Enable Night Mode
-            print('Enable night mode')
             self.master.config(background = background_grey_night)
             for frame in self.dark_frames:
                 frame.config(bg = background_grey_night)
@@ -549,7 +546,6 @@ class Mainframe(tk.Frame):
             self.night_mode = True
         elif daytime and self.night_mode:
             # Disable Night Mode
-            print('Disable night mode')
             self.master.config(background = background_grey)
             for frame in self.dark_frames:
                 frame.config(bg = background_grey)
@@ -566,7 +562,6 @@ class Mainframe(tk.Frame):
                              foreground = text_color_ferrari_red)
             self.night_mode = False
         else:
-            print('Do nothing')
             pass
 
     def DayTime(self):
@@ -738,7 +733,7 @@ class App(tk.Tk):
         tk.Tk.__init__(self)
 
         self.title('Board')
-        #self.attributes('-fullscreen', True)
+        self.attributes('-fullscreen', True)
         self.geometry(screen_res)
         self.configure(background = background_grey,
                        borderwidth = border_width,
