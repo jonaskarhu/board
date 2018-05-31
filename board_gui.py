@@ -438,38 +438,43 @@ class Mainframe(tk.Frame):
 
     def GetWeather(self):
         global forecast_hours
-        json_content = page_getter.get_smhi_weather()
-        now = datetime.datetime.now()
-        this_hour = now.hour
-        smhi_tuple = []
-        found_first = False
-        for item in json_content['timeSeries']:
-            prognosis_time = item['validTime']
-            prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0])
-            if (len(smhi_tuple) < forecast_hours) and\
-               ((prognosis_hr > this_hour) or\
-                ((this_hour == 23) and (prognosis_hr == 0)) or\
-                found_first):
-                found_first = True
-                for para in item['parameters']:
-                    if para['name'] == 'Wsymb2':
-                        wsymb = para['values'][0]
-                    elif para['name'] == 't':
-                        temp = para['values'][0]
-                    elif para['name'] == 'pmean':
-                        rain = para['values'][0]
-                    elif para['name'] == 'ws':
-                        wind = int(round(para['values'][0]))
-                    elif para['name'] == 'gust':
-                        gust = int(round(para['values'][0]))
-                if 0 < rain < 1:
-                    pass
-                else:
-                    rain = int(round(rain))
-                smhi_tuple.append((str(prognosis_hr), mapWsymb2ToPng(wsymb),
-                                   str(temp), str(rain), str(wind), str(gust)))
-            elif len(smhi_tuple) == forecast_hours:
-                return smhi_tuple
+        try:
+            json_content = page_getter.get_smhi_weather()
+            now = datetime.datetime.now()
+            this_hour = now.hour
+            smhi_tuple = []
+            found_first = False
+            for item in json_content['timeSeries']:
+                prognosis_time = item['validTime']
+                prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0])
+                if (len(smhi_tuple) < forecast_hours) and\
+                   ((prognosis_hr > this_hour) or\
+                    ((this_hour == 23) and (prognosis_hr == 0)) or\
+                    found_first):
+                    found_first = True
+                    for para in item['parameters']:
+                        if para['name'] == 'Wsymb2':
+                            wsymb = para['values'][0]
+                        elif para['name'] == 't':
+                            temp = para['values'][0]
+                        elif para['name'] == 'pmean':
+                            rain = para['values'][0]
+                        elif para['name'] == 'ws':
+                            wind = int(round(para['values'][0]))
+                        elif para['name'] == 'gust':
+                            gust = int(round(para['values'][0]))
+                    if 0 < rain < 1:
+                        pass
+                    else:
+                        rain = int(round(rain))
+                    smhi_tuple.append((str(prognosis_hr), mapWsymb2ToPng(wsymb),
+                                       str(temp), str(rain), str(wind), str(gust)))
+                elif len(smhi_tuple) == forecast_hours:
+                    return smhi_tuple
+        except KeyboardInterrupt:
+            raise
+        except:
+            self.after(1000, self.GetWeather())
 
     # Update widget field with new values in a print_tuple that looks like this:
     # print_tuple = [('#', 'Destination', 'Avgår', 'Nästa', 'Läge')
@@ -575,7 +580,11 @@ class Mainframe(tk.Frame):
                  wind, cd, rain) = weather_parser.get_prognosis(prognosis_page)
 
                 now = datetime.datetime.now()
-                time = str(now.hour) + ':' + str(now.minute)
+                this_hour = str(now.hour)
+                this_minute = str(now.minute)
+                if len(this_hour) == 1: this_hour = '0' + this_hour
+                if len(this_minute) == 1: this_minute = '0' + this_minute
+                time = this_hour + ':' + this_minute
                 self.sun_up.set('↑' + sun_up)
                 self.sun_down.set('↓' + sun_down)
 
