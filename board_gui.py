@@ -30,7 +30,7 @@ background_grey_night  = "#000000"
 lighter_grey_night     = "#202020"
 text_color_night       = "#A4A4A4"
 text_font              = 'DejaVu Sans'
-text_size              = 24
+text_size              = 23
 text_size_weather      = 18
 screen_res             = '1400x900'
 
