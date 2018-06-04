@@ -438,43 +438,38 @@ class Mainframe(tk.Frame):
 
     def GetWeather(self):
         global forecast_hours
-        try:
-            json_content = page_getter.get_smhi_weather()
-            now = datetime.datetime.now()
-            this_hour = now.hour
-            smhi_tuple = []
-            found_first = False
-            for item in json_content['timeSeries']:
-                prognosis_time = item['validTime']
-                prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0])
-                if (len(smhi_tuple) < forecast_hours) and\
-                   ((prognosis_hr > this_hour) or\
-                    ((this_hour == 23) and (prognosis_hr == 0)) or\
-                    found_first):
-                    found_first = True
-                    for para in item['parameters']:
-                        if para['name'] == 'Wsymb2':
-                            wsymb = para['values'][0]
-                        elif para['name'] == 't':
-                            temp = para['values'][0]
-                        elif para['name'] == 'pmean':
-                            rain = para['values'][0]
-                        elif para['name'] == 'ws':
-                            wind = int(round(para['values'][0]))
-                        elif para['name'] == 'gust':
-                            gust = int(round(para['values'][0]))
-                    if 0 < rain < 1:
-                        pass
-                    else:
-                        rain = int(round(rain))
-                    smhi_tuple.append((str(prognosis_hr), mapWsymb2ToPng(wsymb),
-                                       str(temp), str(rain), str(wind), str(gust)))
-                elif len(smhi_tuple) == forecast_hours:
-                    return smhi_tuple
-        except KeyboardInterrupt:
-            raise
-        except:
-            self.after(1000, self.GetWeather())
+        json_content = page_getter.get_smhi_weather()
+        now = datetime.datetime.now()
+        this_hour = now.hour
+        smhi_tuple = []
+        found_first = False
+        for item in json_content['timeSeries']:
+            prognosis_time = item['validTime']
+            prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0])
+            if (len(smhi_tuple) < forecast_hours) and\
+               ((prognosis_hr > this_hour) or\
+                ((this_hour == 23) and (prognosis_hr == 0)) or\
+                found_first):
+                found_first = True
+                for para in item['parameters']:
+                    if para['name'] == 'Wsymb2':
+                        wsymb = para['values'][0]
+                    elif para['name'] == 't':
+                        temp = para['values'][0]
+                    elif para['name'] == 'pmean':
+                        rain = para['values'][0]
+                    elif para['name'] == 'ws':
+                        wind = int(round(para['values'][0]))
+                    elif para['name'] == 'gust':
+                        gust = int(round(para['values'][0]))
+                if 0 < rain < 1:
+                    pass
+                else:
+                    rain = int(round(rain))
+                smhi_tuple.append((str(prognosis_hr), mapWsymb2ToPng(wsymb),
+                                   str(temp), str(rain), str(wind), str(gust)))
+            elif len(smhi_tuple) == forecast_hours:
+                return smhi_tuple
 
     # Update widget field with new values in a print_tuple that looks like this:
     # print_tuple = [('#', 'Destination', 'Avgår', 'Nästa', 'Läge')
@@ -625,7 +620,11 @@ class Mainframe(tk.Frame):
             except KeyboardInterrupt:
                 raise
             except:
-                self.HandleException(temperature)
+                try:
+                    temperature
+                    self.HandleException(temperature)
+                except NameError:
+                    self.HandleException("Temperature page.")
 
             try:
                 # Update Weather Forecast
@@ -639,7 +638,11 @@ class Mainframe(tk.Frame):
             except KeyboardInterrupt:
                 raise
             except:
-                self.HandleException(smhi_tuple)
+                try:
+                    smhi_tuple
+                    self.HandleException(smhi_tuple)
+                except NameError:
+                    self.HandleException("Weather page.")
         else:
             self.WeatherDelay += 1
 
@@ -679,15 +682,10 @@ class Mainframe(tk.Frame):
             widget.destroy()
 
     def GetCurrentTemp(self):
-        try:
-            url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
-            weather_page = page_getter.get_page_as_string(url_temp)
-            temp = weather_parser.get_curr_temp(weather_page)
-            return temp
-        except KeyboardInterrupt:
-            raise
-        except:
-            self.HandleException(weather_page)
+        url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
+        weather_page = page_getter.get_page_as_string(url_temp)
+        temp = weather_parser.get_curr_temp(weather_page)
+        return temp
 
     def getPrintTupleForGui(self, bus_stop):
         global backoff_factor
@@ -707,7 +705,11 @@ class Mainframe(tk.Frame):
         except KeyboardInterrupt:
             raise
         except:
-            self.HandleException(bus_stop_page)
+            try:
+                bus_stop_page
+                self.HandleException(bus_stop_page)
+            except NameError:
+                self.HandleException("Bus stop page.")
             backoff_time = backoff_factor * update_interval
             if backoff_factor < 4:
                 backoff_factor *= 2
