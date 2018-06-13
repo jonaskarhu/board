@@ -521,14 +521,17 @@ class Mainframe(tk.Frame):
                     wind = elem
                 elif col == 5:
                     self.wvars[col-1][line].set(wind + '(' + elem + ') m/s')
-
                 col += 1
             line += 1
 
     def NightMode(self):
+        print("Checking daytime...")
         daytime = self.DayTime()
+        print("Is it daytime?", daytime,
+              "\nIs nightmode active?", self.night_mode)
         if (not daytime) and (not self.night_mode):
             # Enable Night Mode
+            print("Enable Nightmode.")
             self.master.config(background = background_grey_night)
             for frame in self.dark_frames:
                 frame.config(bg = background_grey_night)
@@ -546,6 +549,7 @@ class Mainframe(tk.Frame):
             self.night_mode = True
         elif daytime and self.night_mode:
             # Disable Night Mode
+            print("Disable Nightmode.")
             self.master.config(background = background_grey)
             for frame in self.dark_frames:
                 frame.config(bg = background_grey)
@@ -562,6 +566,7 @@ class Mainframe(tk.Frame):
                              foreground = text_color_ferrari_red)
             self.night_mode = False
         else:
+            print("Do nothing.")
             pass
 
     def DayTime(self):
@@ -574,12 +579,7 @@ class Mainframe(tk.Frame):
                 (date, prog, sun_up, sun_down, min_temp, max_temp,
                  wind, cd, rain) = weather_parser.get_prognosis(prognosis_page)
 
-                now = datetime.datetime.now()
-                this_hour = str(now.hour)
-                this_minute = str(now.minute)
-                if len(this_hour) == 1: this_hour = '0' + this_hour
-                if len(this_minute) == 1: this_minute = '0' + this_minute
-                time = this_hour + ':' + this_minute
+                time = self.GetNow()
                 self.sun_up.set('↑' + sun_up)
                 self.sun_down.set('↓' + sun_down)
 
@@ -597,12 +597,24 @@ class Mainframe(tk.Frame):
         except KeyboardInterrupt:
             raise
         except:
+            print("Error checking daytime!")
             return self.daytime
+
+    # Return the time right now as a string hh:mm
+    def GetNow(self):
+        now = datetime.datetime.now()
+        this_hour = str(now.hour)
+        this_minute = str(now.minute)
+        if len(this_hour) == 1: this_hour = '0' + this_hour
+        if len(this_minute) == 1: this_minute = '0' + this_minute
+        time = this_hour + ':' + this_minute
+        return time
 
     # Loop that fetches all fields that continuously shall be updated
     def Update(self):
         global no_of_errors_logged
         global log_errors
+        global backoff_factor
         self.ErrorIndicator.set('!')
         self.update_idletasks()
 
@@ -611,71 +623,82 @@ class Mainframe(tk.Frame):
         if (delay_factor <= self.WeatherDelay) or self.WeatherDelay == 0:
             try:
                 # Update Temperature
+                print("Getting temp...")
                 temperature = self.GetCurrentTemp()
                 if temperature == None:
                     # TODO: Raise some kind of flag in case we don't get curr temp
                     pass
                 else:
                     self.CurrentTemp = temperature
+                    print("Temp done.")
             except KeyboardInterrupt:
                 raise
             except:
-                try:
-                    temperature
-                    self.HandleException(temperature)
-                except NameError:
-                    self.HandleException("Temperature page.")
+                print("Error in temp, handle exception!")
+                self.HandleException("Temperature page.")
 
             try:
                 # Update Weather Forecast
+                print("Getting weather...")
                 smhi_tuple = self.GetWeather()
                 if smhi_tuple == None:
                     # TODO: Raise some kind of flag in case we don't get forecast
                     pass
                 else:
                     self.UpdateWeather(smhi_tuple)
+                    print("Weather done.")
                 self.WeatherDelay = 1
             except KeyboardInterrupt:
                 raise
             except:
-                try:
-                    smhi_tuple
-                    self.HandleException(smhi_tuple)
-                except NameError:
-                    self.HandleException("Weather page.")
+                print("Error in weather, handle exception!")
+                self.HandleException("Weather page.")
         else:
             self.WeatherDelay += 1
 
         # Update Night Mode
         night_delay = math.ceil(self.NightModeInterval/self.TimerInterval)
         if (night_delay <= self.NightModeDelay) or self.NightModeDelay == 0:
+            print("Check nightmode...")
             self.NightMode()
             self.NightModeDelay = 1
         else:
             self.NightModeDelay += 1
 
         # Update Bus times
-        result = self.getPrintTupleForGui(the_bus_stop)
-        if result == None:
-            # If there is an exception, 'None' will be returned and it needs to
-            # be handled, just pass since the exception will callback here
-            pass
-        else:
-            (bus_stop, curr_time, print_tuple) = result
-            no_of_dests = len(print_tuple) - 1
-            if self.NrOfDests != no_of_dests:
-                #print(self.NrOfDests, "!=", no_of_dests, "-> Restart!")
-                self.Destroy()
-                self.after(1, self.Start)
+        try:
+            print("Getting bus page...")
+            result = self.getPrintTupleForGui(the_bus_stop)
+            if result == None:
+                # If there is an exception, 'None' will be returned and it needs
+                # to be handled, just pass since the exception will callback here
+                pass
             else:
-                self.BusStop.set('Hållplats: ' + bus_stop)
-                self.CurrTime.set('Kl: ' + curr_time)
-                self.CurrTemp.set('Temp: ' + self.CurrentTemp + '°C')
-                self.ErrorIndicator.set('')
-                if (no_of_errors_logged > 0) and log_errors:
-                    self.NrOfErrorsLogged.set(str(no_of_errors_logged))
-                self.UpdateFields(print_tuple)
-                self.after(self.TimerInterval, self.Update)
+                (bus_stop, curr_time, print_tuple) = result
+                no_of_dests = len(print_tuple) - 1
+                if self.NrOfDests != no_of_dests:
+                    print(self.NrOfDests, "!=", no_of_dests, "-> Restart!\n")
+                    self.Destroy()
+                    self.after(1, self.Start)
+                else:
+                    self.BusStop.set('Hållplats: ' + bus_stop)
+                    self.CurrTime.set('Kl: ' + curr_time)
+                    self.CurrTemp.set('Temp: ' + self.CurrentTemp + '°C')
+                    self.ErrorIndicator.set('')
+                    if (no_of_errors_logged > 0) and log_errors:
+                        self.NrOfErrorsLogged.set(str(no_of_errors_logged))
+                    self.UpdateFields(print_tuple)
+                    print("Bus page done, loop!\n")
+                    self.after(self.TimerInterval, self.Update)
+        except KeyboardInterrupt:
+            raise
+        except:
+            print("Error in bus page, handle exception!")
+            self.HandleException("Bus stop page.")
+            backoff_time = backoff_factor * update_interval
+            if backoff_factor < 4:
+                backoff_factor *= 2
+            self.after(backoff_time, self.Update)
 
     def Destroy(self):
         for widget in self.winfo_children():
@@ -689,33 +712,21 @@ class Mainframe(tk.Frame):
 
     def getPrintTupleForGui(self, bus_stop):
         global backoff_factor
-        try:
-            bus_stop_page = page_getter.get_bus_stop_page(bus_stop)
-            (stop,
-             curr_time,
-             print_tuple_in) = bus_stop_parser.get_print_tuple(bus_stop_page)
-            print_tuple_temp = [('#', 'Destination', 'Avgår', 'Nästa', 'Läge')] +\
-                               print_tuple_in
-            if bus_stop != 'Södermalmsgatan':
-                print_tuple = []
-                for t in print_tuple_temp: print_tuple.append(t[0:4])
-            else:                          print_tuple = print_tuple_temp
-            backoff_factor = 1
-            return (stop, curr_time, print_tuple)
-        except KeyboardInterrupt:
-            raise
-        except:
-            try:
-                bus_stop_page
-                self.HandleException(bus_stop_page)
-            except NameError:
-                self.HandleException("Bus stop page.")
-            backoff_time = backoff_factor * update_interval
-            if backoff_factor < 4:
-                backoff_factor *= 2
-            self.after(backoff_time, self.Update)
+        bus_stop_page = page_getter.get_bus_stop_page(bus_stop)
+        (stop,
+         curr_time,
+         print_tuple_in) = bus_stop_parser.get_print_tuple(bus_stop_page)
+        print_tuple_temp = [('#', 'Destination', 'Avgår', 'Nästa', 'Läge')] +\
+                           print_tuple_in
+        if bus_stop != 'Södermalmsgatan':
+            print_tuple = []
+            for t in print_tuple_temp: print_tuple.append(t[0:4])
+        else:                          print_tuple = print_tuple_temp
+        backoff_factor = 1
+        return (stop, curr_time, print_tuple)
 
     def HandleException(self, error_page):
+        print("HandleException start...")
         global no_of_errors_logged
         prev_error_ind = str(self.ErrorIndicator.get())
         new_error_ind = prev_error_ind + '!'
@@ -724,20 +735,17 @@ class Mainframe(tk.Frame):
         log_file_path = getLogfile(no_of_errors_logged,
                                    no_of_errors_to_save)
         log_file = open(log_file_path, "a")
-        now = time.strftime("%Y-%m-%d %H:%M:%S UTC+1", time.gmtime())
+        now = time.strftime("%Y-%m-%d %H:%M:%S GMT", time.gmtime())
         exception = "Unexpected exception:" + str(sys.exc_info())
         log_file.write("ERROR[" + now + "]:" +  exception + "\n")
-        print("logged error to file:", log_file_path)
+        nownow = self.GetNow()
+        print(nownow, "logged error to file:", log_file_path)
         log_file.write(traceback.format_exc())
-        try:
-            error_page
-        except:
-            pass
-        else:
-            log_file.write("Web page that caused the error:\n" +
-                           error_page + "\n\n")
+        log_file.write("Web page that caused the error:\n" +
+                       error_page + "\n\n")
         log_file.close()
         no_of_errors_logged += 1
+        print("HandleException end.")
 
 class App(tk.Tk):
     def __init__(self):
