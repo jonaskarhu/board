@@ -30,8 +30,8 @@ background_grey_night  = "#000000"
 lighter_grey_night     = "#181818"#"#202020"
 text_color_night       = "#646464"#"#A4A4A4"
 text_font              = 'DejaVu Sans'
-text_size              = 16#23
-text_size_weather      = 13#18
+text_size              = 23
+text_size_weather      = 17#18
 screen_res             = '1400x900'
 
 ## Global settings
@@ -77,7 +77,10 @@ def createPhotoImage(path, is_night):
         if img.mode is not "RGBA":
             img = img.convert("RGBA")
         if is_night:
-            img = ImageEnhance.Brightness(img).enhance(0.5)
+            if path[:3] == "bus":
+                img = ImageEnhance.Brightness(img).enhance(0.3)
+       	    elif path[:3] == "wea":
+                img = ImageEnhance.Brightness(img).enhance(0.4)
     except FileNotFoundError:
         img = Image.open('bus_images/unknown.png')
     img.thumbnail((text_size*4.6, 10000), Image.ANTIALIAS)
