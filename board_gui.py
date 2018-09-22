@@ -3,7 +3,7 @@
 
 ## GUI lib
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageEnhance
 import tkinter.font as tkfont
 
 ## Import other modules
@@ -27,17 +27,17 @@ text_color_off_white   = "#F0F8FA"
 text_color_ferrari_red = "#FF2800"
 text_color_red_night   = "#971600"
 background_grey_night  = "#000000"
-lighter_grey_night     = "#202020"
-text_color_night       = "#A4A4A4"
+lighter_grey_night     = "#181818"#"#202020"
+text_color_night       = "#646464"#"#A4A4A4"
 text_font              = 'DejaVu Sans'
-text_size              = 23
-text_size_weather      = 18
+text_size              = 16#23
+text_size_weather      = 13#18
 screen_res             = '1400x900'
 
 ## Global settings
-update_interval      = 15000  # milliseconds
-night_mode_interval  = 60000  # milliseconds
-weather_interval     = 30000#300000 # milliseconds
+update_interval      = 15000  # milliseconds -> 15 sec
+night_mode_interval  = 90000  # milliseconds -> 1 min 30 sec
+weather_interval     = 666000 # milliseconds -> 11 min 6 sec
 border_width         = 0 # set to 2 to debug
 border_width_weather = 0 # set to 2 to debug
 the_bus_stop         = 'Södermalmsgatan'
@@ -71,9 +71,13 @@ def getColAttrWeather():
     # returns (col_width, col_weight)
     return(10, 20)
 
-def createPhotoImage(path):
+def createPhotoImage(path, is_night):
     try:
         img = Image.open(path)
+        if img.mode is not "RGBA":
+            img = img.convert("RGBA")
+        if is_night:
+            img = ImageEnhance.Brightness(img).enhance(0.5)
     except FileNotFoundError:
         img = Image.open('bus_images/unknown.png')
     img.thumbnail((text_size*4.6, 10000), Image.ANTIALIAS)
@@ -483,7 +487,7 @@ class Mainframe(tk.Frame):
             prev_elem = ''
             for elem in tup:
                 if col == 0:
-                    self.img = createPhotoImage('bus_images/' + elem + '.png')
+                    self.img = createPhotoImage('bus_images/' + elem + '.png', self.night_mode)
                     self.vars[line][col].configure(image = self.img)
                     self.vars[line][col].image = self.img
                 elif col == 1:
@@ -509,7 +513,7 @@ class Mainframe(tk.Frame):
                         elem = '0' + elem
                     self.wvars[col][line].set('kl ' + elem)
                 elif col == 1:
-                    self.img = createPhotoImage('weather_icons/' + elem + '.png')
+                    self.img = createPhotoImage('weather_icons/' + elem + '.png', self.night_mode)
                     self.wvars[col][line].configure(image = self.img)
                     self.wvars[col][line].image = self.img
                     pass
@@ -618,6 +622,15 @@ class Mainframe(tk.Frame):
         self.ErrorIndicator.set('!')
         self.update_idletasks()
 
+        # Update Night Mode
+        night_delay = math.ceil(self.NightModeInterval/self.TimerInterval)
+        if (night_delay <= self.NightModeDelay) or self.NightModeDelay == 0:
+            print("Check nightmode...")
+            self.NightMode()
+            self.NightModeDelay = 1
+        else:
+            self.NightModeDelay += 1
+
         # Update Weather (less often than the bus info)
         delay_factor = math.ceil(self.WeatherInterval/self.TimerInterval)
         if (delay_factor <= self.WeatherDelay) or self.WeatherDelay == 0:
@@ -655,15 +668,6 @@ class Mainframe(tk.Frame):
                 self.HandleException("Weather page.")
         else:
             self.WeatherDelay += 1
-
-        # Update Night Mode
-        night_delay = math.ceil(self.NightModeInterval/self.TimerInterval)
-        if (night_delay <= self.NightModeDelay) or self.NightModeDelay == 0:
-            print("Check nightmode...")
-            self.NightMode()
-            self.NightModeDelay = 1
-        else:
-            self.NightModeDelay += 1
 
         # Update Bus times
         try:
