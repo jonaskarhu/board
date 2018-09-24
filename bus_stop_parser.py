@@ -5,6 +5,60 @@ import re
 import bus_stop_pos
 import custom_exception
 
+def natural_key(string_):
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+
+def remove_duplicates(buses):
+    number_of_matches = 0
+    count_list = []
+    for b in buses:
+        count_list.append([b, 0])
+    for b1 in count_list:
+        for b2 in count_list:
+            if (b1[0][0] == b2[0][0]) and (b1[0][1] == b2[0][1]) and (b1[0][4] == b2[0][4]):
+                b1[1] = b1[1] + 1
+                number_of_matches = number_of_matches + 1
+
+    have_duplicates = False
+    if number_of_matches > len(buses):
+        have_duplicates = True
+
+    if have_duplicates:
+        new_buses = []
+        print("Duplicates found, remove them...")
+        for b1 in count_list:
+            for b2 in count_list:
+                if (b1[0][0] == b2[0][0]) and (b1[0][1] == b2[0][1]) and (b1[0][4] == b2[0][4]):
+                    if (b1[0][2] == b2[0][2]) and (b1[0][3] == b2[0][3]) and b1[0] not in new_buses and b1[1] == 1:
+                        new_buses.append(b1[0])
+                        print("adding bus without change:", b1[0])
+                    elif b1[0] != b2[0]:
+                        ## combine times for duplicates
+                        list_of_times = [b1[0][2], b1[0][3], b2[0][2], b2[0][3]]
+                        print("Times before sort:", list_of_times)
+                        list_of_times = sorted(list_of_times, key=natural_key)
+                        print("Times before:", list_of_times)
+                        if '--' in list_of_times and len(list_of_times) > 2:
+                            list_of_times.remove('--')
+                            if '--' in list_of_times and len(list_of_times) > 2:
+                                list_of_times.remove('--')
+                        if 'Nu' in list_of_times:
+                            list_of_times.remove('Nu')
+                            list_of_times.insert(0, 'Nu')
+                            if 'Nu' in list_of_times[1:]:
+                                list_of_times.insert(0, 'Nu')
+                        ## TODO: handle "ca" time
+                        print("Times after:", list_of_times)
+                        new_bus = (b1[0][0], b1[0][1], list_of_times[0], list_of_times[1], b1[0][4])
+                        if new_bus not in new_buses:
+                            ## only add unique buses
+                            new_buses.append(new_bus)
+                            print("adding bus WITHOUT duplicate:", b1[0])
+        return new_buses
+    else:
+        print("No duplicates found, return original!")
+        return buses
+
 # Bus stop regex pattern, in one, two, or three words, accepting éæåäöÅÄÖ, e.g.:
 # Östra Sjukhuset, Linnéplatsen, Jægerdorffsplatsen, Dr Fries Torg, SKF
 busstop_pattern = '([A-ZÅÄÖa-zæéåäö\s]+)'
@@ -48,7 +102,9 @@ def get_print_tuple(page):
     if len(hrs) == 1: hrs = '0' + hrs
     curr_time = hrs + ":" + mins
 
+    buses = remove_duplicates(sorted(print_tuple, key = lambda x: x[4]))
+
     return (stop,
             curr_time,
-            sorted(print_tuple, key = lambda x: x[4]))
+            buses)
 
