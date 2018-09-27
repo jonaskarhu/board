@@ -120,7 +120,11 @@ def get_print_tuple(page):
     if len(hrs) == 1: hrs = '0' + hrs
     curr_time = hrs + ":" + mins
 
-    buses = remove_duplicates(sorted(print_tuple, key = lambda x: x[4]))
+    try:
+        buses = remove_duplicates(sorted(print_tuple, key = lambda x: x[4]))
+    except:
+        print("WARNING: Could not remove duplicate buses!")
+        buses = sorted(print_tuple, key = lambda x: x[4])
 
     return (stop,
             curr_time,
