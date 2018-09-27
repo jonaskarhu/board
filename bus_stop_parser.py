@@ -37,18 +37,36 @@ def remove_duplicates(buses):
                         list_of_times = [b1[0][2], b1[0][3], b2[0][2], b2[0][3]]
                         print("Times before sort:", list_of_times)
                         list_of_times = sorted(list_of_times, key=natural_key)
-                        print("Times before:", list_of_times)
                         if '--' in list_of_times and len(list_of_times) > 2:
                             list_of_times.remove('--')
                             if '--' in list_of_times and len(list_of_times) > 2:
                                 list_of_times.remove('--')
+                        ## TODO: handle "ca" time
+                        ca_list = []
+                        list_of_times_temp = []
+                        index = 0
+                        for t in list_of_times:
+                            if t[:2] == 'ca':
+                                list_of_times_temp.append(t[3:])
+                                ca_list.append(index)
+                            else:
+                                list_of_times_temp.append(t)
+                            index = index + 1
+                        if len(ca_list) > 0:
+                            list_of_times_temp_sorted = sorted(list_of_times_temp, key=natural_key)
+                            for i in ca_list:
+                                j = 0
+                                for t in list_of_times_temp_sorted:
+                                    if t == list_of_times_temp[i]:
+                                        list_of_times_temp_sorted[j] = 'ca ' + list_of_times_temp[i]
+                                    j = j + 1
+                            list_of_times = list_of_times_temp_sorted
                         if 'Nu' in list_of_times:
                             list_of_times.remove('Nu')
                             list_of_times.insert(0, 'Nu')
                             if 'Nu' in list_of_times[1:]:
                                 list_of_times.insert(0, 'Nu')
-                        ## TODO: handle "ca" time
-                        print("Times after:", list_of_times)
+                        print("Times after sort:", list_of_times)
                         new_bus = (b1[0][0], b1[0][1], list_of_times[0], list_of_times[1], b1[0][4])
                         if new_bus not in new_buses:
                             ## only add unique buses
