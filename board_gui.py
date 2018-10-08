@@ -21,18 +21,26 @@ import re
 import math
 
 ## Fonts and Colors (RGB)
+autumn_background      = "#953208"
+autumn_foreground      = "#cf6401"
+winter_background      = "#7ba0c9"
+winter_foreground      = "#9fbad8"
+spring_background      = "#a6567d"
+spring_foreground      = "#c188a4"
+summer_background      = "#2b8100"
+summer_foreground      = "#349a00"
 background_grey        = "#3C4550"
 lighter_grey           = "#626971"
 text_color_off_white   = "#F0F8FA"
 text_color_ferrari_red = "#FF2800"
 text_color_red_night   = "#971600"
 background_grey_night  = "#000000"
-lighter_grey_night     = "#181818"#"#202020"
-text_color_night       = "#646464"#"#A4A4A4"
+lighter_grey_night     = "#181818"
+text_color_night       = "#646464"
 text_font              = 'DejaVu Sans'
 text_size              = 23
 text_size_weather      = 17#18
-screen_res             = '1400x900'
+screen_res             = '1089x700'
 
 ## Global settings
 update_interval      = 15000  # milliseconds -> 15 sec
@@ -48,6 +56,23 @@ backoff_factor       = 1
 no_of_errors_logged  = 0
 no_of_errors_to_save = 3
 log_errors           = False
+
+def getSeason(int_month):
+    switcher = {
+        1: "winter",
+        2: "winter",
+        3: "spring",
+        4: "spring",
+        5: "spring",
+        6: "summer",
+        7: "summer",
+        8: "summer",
+        9: "autumn",
+        10: "autumn",
+        11: "autumn",
+        12: "winter"
+    }
+    return switcher.get(int_month, "Invalid month")
 
 def getLogfile(no_of_errors_logged, no_of_errors_to_save):
     if no_of_errors_logged >= no_of_errors_to_save:
@@ -441,6 +466,9 @@ class Mainframe(tk.Frame):
         self.NightModeInterval = night_mode_interval
         self.NightModeDelay = 0
 
+        # Initialize season
+        self.Season = ""
+
         self.Update()
 
     def GetWeather(self):
@@ -531,6 +559,47 @@ class Mainframe(tk.Frame):
                 col += 1
             line += 1
 
+    def ChangeFrameColors(self, background_color, foreground_color,
+                          text_color_white, text_color_red):
+        print("Change colors.")
+        self.master.config(background = background_color)
+        for frame in self.dark_frames:
+            frame.config(bg = background_color)
+        for label in self.dark_labels:
+            label.config(bg = background_color,
+                         foreground = text_color_white)
+        for frame in self.light_frames:
+            frame.config(bg = foreground_color)
+        for label in self.light_labels:
+            label.config(bg = foreground_color,
+                         foreground = text_color_white)
+        for label in self.red_labels:
+            label.config(bg = background_color,
+                         foreground = text_color_red)
+
+    def CheckAndUpdateSeasonalColors(self):
+        now = datetime.datetime.now()
+        season = getSeason(now.month)
+        print(now.month, season)
+        if season == "summer":
+            self.Season = "summer"
+            seasonal_bg_color = summer_background
+            seasonal_fg_color = summer_foreground
+        elif season == "autumn":
+            self.Season = "autumn"
+            seasonal_bg_color = autumn_background
+            seasonal_fg_color = autumn_foreground
+        elif season == "winter":
+            self.Season = "winter"
+            seasonal_bg_color = winter_background
+            seasonal_fg_color = winter_foreground
+        elif season == "spring":
+            self.Season = "spring"
+            seasonal_bg_color = spring_background
+            seasonal_fg_color = spring_foreground
+        self.ChangeFrameColors(seasonal_bg_color, seasonal_fg_color,
+                               text_color_off_white, text_color_ferrari_red)
+
     def NightMode(self):
         print("Checking daytime...")
         daytime = self.DayTime()
@@ -539,38 +608,14 @@ class Mainframe(tk.Frame):
         if (not daytime) and (not self.night_mode):
             # Enable Night Mode
             print("Enable Nightmode.")
-            self.master.config(background = background_grey_night)
-            for frame in self.dark_frames:
-                frame.config(bg = background_grey_night)
-            for label in self.dark_labels:
-                label.config(bg = background_grey_night,
-                             foreground = text_color_night)
-            for frame in self.light_frames:
-                frame.config(bg = lighter_grey_night)
-            for label in self.light_labels:
-                label.config(bg = lighter_grey_night,
-                             foreground = text_color_night)
-            for label in self.red_labels:
-                label.config(bg = background_grey_night,
-                             foreground = text_color_red_night)
+            self.ChangeFrameColors(background_grey_night, lighter_grey_night,
+                                   text_color_night, text_color_red_night)
             self.night_mode = True
         elif daytime and self.night_mode:
             # Disable Night Mode
+            # Set to daytime colors, depending on the time of year
             print("Disable Nightmode.")
-            self.master.config(background = background_grey)
-            for frame in self.dark_frames:
-                frame.config(bg = background_grey)
-            for label in self.dark_labels:
-                label.config(bg = background_grey,
-                             foreground = text_color_off_white)
-            for frame in self.light_frames:
-                frame.config(bg = lighter_grey)
-            for label in self.light_labels:
-                label.config(bg = lighter_grey,
-                             foreground = text_color_off_white)
-            for label in self.red_labels:
-                label.config(bg = background_grey,
-                             foreground = text_color_ferrari_red)
+            self.CheckAndUpdateSeasonalColors()
             self.night_mode = False
         else:
             print("Do nothing.")
@@ -624,6 +669,10 @@ class Mainframe(tk.Frame):
         global backoff_factor
         self.ErrorIndicator.set('!')
         self.update_idletasks()
+
+        # Init season colors
+        if self.Season == "":
+            self.CheckAndUpdateSeasonalColors()
 
         # Update Night Mode
         night_delay = math.ceil(self.NightModeInterval/self.TimerInterval)
