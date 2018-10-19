@@ -8,7 +8,7 @@ import tkinter.font as tkfont
 
 ## Import other modules
 import page_getter
-import bus_stop_parser
+import vt_api_parser
 import weather_parser
 
 ## Misc system imports
@@ -768,16 +768,9 @@ class Mainframe(tk.Frame):
 
     def getPrintTupleForGui(self, bus_stop):
         global backoff_factor
-        bus_stop_page = page_getter.get_bus_stop_page(bus_stop)
         (stop,
          curr_time,
-         print_tuple_in) = bus_stop_parser.get_print_tuple(bus_stop_page)
-        print_tuple_temp = [('#', 'Destination', 'Avgår', 'Nästa', 'Läge')] +\
-                           print_tuple_in
-        if bus_stop != 'Södermalmsgatan':
-            print_tuple = []
-            for t in print_tuple_temp: print_tuple.append(t[0:4])
-        else:                          print_tuple = print_tuple_temp
+         print_tuple) = vt_api_parser.get_print_tuple()
         backoff_factor = 1
         return (stop, curr_time, print_tuple)
 
@@ -812,6 +805,7 @@ class App(tk.Tk):
         self.geometry(screen_res)
         self.configure(background = background_grey,
                        borderwidth = border_width,
+                       cursor = 'none',
                        relief = "solid")
 
         Mainframe(self).pack(fill='x', padx = 1*text_size, pady = 1*text_size)
