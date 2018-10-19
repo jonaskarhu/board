@@ -13,7 +13,7 @@ def get_time_to_departure(absolute_time):
     if 0 <= departure_hour <= 5 and 18 <= now.hour <= 23:
         departure_hour = 24
     time_to_departure = 60*(departure_hour - now.hour) + departure_minute - now.minute
-    return str(time_to_departure)
+    return time_to_departure
 
 def get_print_tuple():
     jp = vasttrafik.JournyPlanner(
@@ -22,7 +22,7 @@ def get_print_tuple():
 
     sodermalmsgatan_id = jp.location_name('Södermalmsgatan, Göteborg')[0]['id']
     departure_board = jp.departureboard(sodermalmsgatan_id)
-    raw=[]
+    #raw=[]
     buses={}
     for d in departure_board:
         is_realtime = False
@@ -33,7 +33,7 @@ def get_print_tuple():
             time = get_time_to_departure(d['time'])
         except:
             raise
-        raw.append((d['sname'], d['direction'], time, d['track'], is_realtime))
+        #raw.append((d['sname'], d['direction'], time, d['track'], is_realtime))
         bus_no = d['sname']
         destination = d['direction']
         bus = bus_no + ' ' + destination
@@ -70,21 +70,15 @@ def get_print_tuple():
 
     tuple_list=[]
     for bus in buses:
-        if buses[bus]['next']['time'] == '':
-            buses[bus]['next']['time'] = '--'
-        else:
-            if int(buses[bus]['next']['time']) < 1:
-                buses[bus]['next']['time'] = 'Nu'
-            if not buses[bus]['next']['isrt']:
-                buses[bus]['next']['time'] = 'ca ' + buses[bus]['next']['time']
-
-        if buses[bus]['nextnext']['time'] == '':
-            buses[bus]['nextnext']['time'] = '--'
-        else:
-            if int(buses[bus]['nextnext']['time']) < 1:
+        if buses[bus]['next']['time'] < 1:
+            buses[bus]['next']['time'] = 'Nu'
+        if not buses[bus]['next']['isrt']:
+            buses[bus]['next']['time'] = 'ca ' + str(buses[bus]['next']['time'])
+        if buses[bus]['nextnext']['time'] != '':
+            if buses[bus]['nextnext']['time'] < 1:
                 buses[bus]['nextnext']['time'] = 'Nu'
             if not buses[bus]['nextnext']['isrt']:
-                buses[bus]['nextnext']['time'] = 'ca ' + buses[bus]['nextnext']['time']
+                buses[bus]['nextnext']['time'] = 'ca ' + str(buses[bus]['nextnext']['time'])
 
         line = bus[:bus.index(' ')]
         dest = bus[bus.index(' ')+1:]
@@ -103,4 +97,10 @@ def get_print_tuple():
         hour = str.insert(0, '0')
     if len(min) < 2:
         min = str.insert(0, '0')
+    #print("RAW:")
+    #for r in raw:
+    #    print(r)
+    #print("OUTPUT:")
+    #for p in print_tuple:
+    #    print(p)
     return('Södermalmsgatan', hour + ":" + min, print_tuple)
