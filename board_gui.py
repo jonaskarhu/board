@@ -634,8 +634,13 @@ class Mainframe(tk.Frame):
                 time = self.GetNow()
                 self.sun_up.set('↑' + sun_up)
                 self.sun_down.set('↓' + sun_down)
-
-                if (time < sun_down < sun_up) or (sun_down < sun_up <= time):
+                morning = '06:00'
+                night = '22:00'
+                if (morning <= time <= night):
+                    # custom times, set daytime even though sun might not be up
+                    self.daytime = True
+                    return True
+                elif (time < sun_down < sun_up) or (sun_down < sun_up <= time):
                     # sun down is after midnight
                     self.daytime = True
                     return True
