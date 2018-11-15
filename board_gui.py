@@ -40,7 +40,7 @@ text_color_night       = "#646464"
 text_font              = 'DejaVu Sans'
 text_size              = 23
 text_size_weather      = 17#18
-screen_res             = '1089x700'
+screen_res             = '1920x1080'
 
 ## Global settings
 update_interval      = 15000  # milliseconds -> 15 sec

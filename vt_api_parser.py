@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-import vasttrafik
+import vasttrafik_api
 import secrets
 import datetime
 
@@ -16,12 +16,13 @@ def get_time_to_departure(absolute_time):
     return time_to_departure
 
 def get_print_tuple():
-    jp = vasttrafik.JournyPlanner(
+    jp = vasttrafik_api.JourneyPlanner(
         key=secrets.get_key(),
         secret=secrets.get_secret())
 
     sodermalmsgatan_id = jp.location_name('Södermalmsgatan, Göteborg')[0]['id']
-    departure_board = jp.departureboard(sodermalmsgatan_id)
+    departure_board = jp.departureboard(sodermalmsgatan_id, time_span=180,
+                                        max_departures_per_line=2)
     #raw=[]
     buses={}
     for d in departure_board:
@@ -94,9 +95,9 @@ def get_print_tuple():
     hour = str(now.hour)
     min = str(now.minute)
     if len(hour) < 2:
-        hour = str.insert(0, '0')
+        hour = '0' + hour
     if len(min) < 2:
-        min = str.insert(0, '0')
+        min = '0' + min
     #print("RAW:")
     #for r in raw:
     #    print(r)
