@@ -17,6 +17,7 @@ import datetime
 import sys
 import traceback
 import os.path
+import os, errno
 import re
 import math
 
@@ -51,11 +52,15 @@ border_width_weather = 0 # set to 2 to debug
 the_bus_stop         = 'Södermalmsgatan'
 forecast_hours       = 10
 
+## Debugging
+debugging            = True
+current_date         = None
+
 ## Fault handling
 backoff_factor       = 1
 no_of_errors_logged  = 0
 no_of_errors_to_save = 3
-log_errors           = False
+display_log_errors   = False
 
 def getSeason(int_month):
     switcher = {
@@ -141,6 +146,13 @@ def mapWsymb2ToPng(wsymb):
     elif wsymb == 27: return 'snow'
     else:             return 'unknown'
 
+def SilentRemove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e:
+        if e.errno != errno.ENOENT: # errno.ENOENT: no such file or directory
+            raise                   # raise if a different error occurred
+
 class Mainframe(tk.Frame):
     # Mainframe contains the widgets
     # More advanced programs may have multiple frames
@@ -157,6 +169,9 @@ class Mainframe(tk.Frame):
         # in this case the * an ** operators unpack the parameters
 
     def Start(self):
+        self.DebugLog("Starting application.")
+        print("Application running...")
+
         # Create the top frame, including bus stop and time, and an empty line
         self.BusStop = tk.StringVar()
         self.CurrTime = tk.StringVar()
@@ -515,21 +530,18 @@ class Mainframe(tk.Frame):
         line = 0
         for tup in print_tuple:
             col = 0
-            prev_elem = ''
             for elem in tup:
                 if col == 0:
                     self.img = createPhotoImage('bus_images/' + elem + '.png', self.night_mode)
                     self.vars[line][col].configure(image = self.img)
                     self.vars[line][col].image = self.img
                 elif col == 1:
-                    if (elem == 'Extrabuss') and (prev_elem == '25'):
-                        elem = elem + ' Linnéplatsen'
                     self.vars[line][col].set(elem)
                 else:
                     self.vars[line][col].set(elem)
                 col += 1
-                prev_elem = elem
             line += 1
+        self.DebugLog("Buses updated.")
 
     def UpdateWeather(self, smhi_tuple):
         # Each row in smhi_tuple represents one displayed weather column
@@ -558,10 +570,10 @@ class Mainframe(tk.Frame):
                     self.wvars[col-1][line].set(wind + '(' + elem + ') m/s')
                 col += 1
             line += 1
+        self.DebugLog("Weather updated.")
 
     def ChangeFrameColors(self, background_color, foreground_color,
                           text_color_white, text_color_red):
-        print("Change colors.")
         self.master.config(background = background_color)
         for frame in self.dark_frames:
             frame.config(bg = background_color)
@@ -580,7 +592,6 @@ class Mainframe(tk.Frame):
     def CheckAndUpdateSeasonalColors(self):
         now = datetime.datetime.now()
         season = getSeason(now.month)
-        print(now.month, season)
         if season == "summer":
             self.Season = "summer"
             seasonal_bg_color = summer_background
@@ -597,28 +608,25 @@ class Mainframe(tk.Frame):
             self.Season = "spring"
             seasonal_bg_color = spring_background
             seasonal_fg_color = spring_foreground
+        self.DebugLog("Set seasonal color: " + season + ".")
         self.ChangeFrameColors(seasonal_bg_color, seasonal_fg_color,
                                text_color_off_white, text_color_ferrari_red)
 
     def NightMode(self):
-        print("Checking daytime...")
         daytime = self.DayTime()
-        print("Is it daytime?", daytime,
-              "\nIs nightmode active?", self.night_mode)
         if (not daytime) and (not self.night_mode):
             # Enable Night Mode
-            print("Enable Nightmode.")
+            self.DebugLog("Enable night mode.")
             self.ChangeFrameColors(background_grey_night, lighter_grey_night,
                                    text_color_night, text_color_red_night)
             self.night_mode = True
         elif daytime and self.night_mode:
             # Disable Night Mode
             # Set to daytime colors, depending on the time of year
-            print("Disable Nightmode.")
+            self.DebugLog("Disable night mode.")
             self.CheckAndUpdateSeasonalColors()
             self.night_mode = False
         else:
-            print("Do nothing.")
             pass
 
     def DayTime(self):
@@ -654,7 +662,7 @@ class Mainframe(tk.Frame):
         except KeyboardInterrupt:
             raise
         except:
-            print("Error checking daytime!")
+            self.DebugLog("Error checking daytime!")
             return self.daytime
 
     # Return the time right now as a string hh:mm
@@ -670,7 +678,7 @@ class Mainframe(tk.Frame):
     # Loop that fetches all fields that continuously shall be updated
     def Update(self):
         global no_of_errors_logged
-        global log_errors
+        global display_log_errors
         global backoff_factor
         self.ErrorIndicator.set('!')
         self.update_idletasks()
@@ -682,7 +690,6 @@ class Mainframe(tk.Frame):
         # Update Night Mode
         night_delay = math.ceil(self.NightModeInterval/self.TimerInterval)
         if (night_delay <= self.NightModeDelay) or self.NightModeDelay == 0:
-            print("Check nightmode...")
             self.NightMode()
             self.NightModeDelay = 1
         else:
@@ -693,42 +700,37 @@ class Mainframe(tk.Frame):
         if (delay_factor <= self.WeatherDelay) or self.WeatherDelay == 0:
             try:
                 # Update Temperature
-                print("Getting temp...")
                 temperature = self.GetCurrentTemp()
                 if temperature == None:
                     # TODO: Raise some kind of flag in case we don't get curr temp
                     pass
                 else:
                     self.CurrentTemp = temperature
-                    print("Temp done.")
             except KeyboardInterrupt:
                 raise
             except:
-                print("Error in temp, handle exception!")
+                self.DebugLog("Error in temp, handle exception!")
                 self.HandleException("Temperature page.")
 
             try:
                 # Update Weather Forecast
-                print("Getting weather...")
                 smhi_tuple = self.GetWeather()
                 if smhi_tuple == None:
                     # TODO: Raise some kind of flag in case we don't get forecast
                     pass
                 else:
                     self.UpdateWeather(smhi_tuple)
-                    print("Weather done.")
                 self.WeatherDelay = 1
             except KeyboardInterrupt:
                 raise
             except:
-                print("Error in weather, handle exception!")
+                self.DebugLog("Error in weather, handle exception!")
                 self.HandleException("Weather page.")
         else:
             self.WeatherDelay += 1
 
         # Update Bus times
         try:
-            print("Getting bus page...")
             result = self.getPrintTupleForGui(the_bus_stop)
             if result == None:
                 # If there is an exception, 'None' will be returned and it needs
@@ -738,7 +740,7 @@ class Mainframe(tk.Frame):
                 (bus_stop, curr_time, print_tuple) = result
                 no_of_dests = len(print_tuple) - 1
                 if self.NrOfDests != no_of_dests:
-                    print(self.NrOfDests, "!=", no_of_dests, "-> Restart!\n")
+                    self.DebugLog(self.NrOfDests + " != " + no_of_dests + " -> Restart!")
                     self.Destroy()
                     self.after(1, self.Start)
                 else:
@@ -746,15 +748,14 @@ class Mainframe(tk.Frame):
                     self.CurrTime.set('Kl: ' + curr_time)
                     self.CurrTemp.set('Temp: ' + self.CurrentTemp + '°C')
                     self.ErrorIndicator.set('')
-                    if (no_of_errors_logged > 0) and log_errors:
+                    if (no_of_errors_logged > 0) and display_log_errors:
                         self.NrOfErrorsLogged.set(str(no_of_errors_logged))
                     self.UpdateFields(print_tuple)
-                    print("Bus page done, loop!\n")
                     self.after(self.TimerInterval, self.Update)
         except KeyboardInterrupt:
             raise
         except:
-            print("Error in bus page, handle exception!")
+            self.DebugLog("Error in bus page, handle exception!")
             self.HandleException("Bus stop page.")
             backoff_time = backoff_factor * update_interval
             if backoff_factor < 4:
@@ -769,6 +770,7 @@ class Mainframe(tk.Frame):
         url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
         weather_page = page_getter.get_page_as_string(url_temp)
         temp = weather_parser.get_curr_temp(weather_page)
+        self.DebugLog("Temperature updated.")
         return temp
 
     def getPrintTupleForGui(self, bus_stop):
@@ -780,7 +782,7 @@ class Mainframe(tk.Frame):
         return (stop, curr_time, print_tuple)
 
     def HandleException(self, error_page):
-        print("HandleException start...")
+        self.DebugLog("HandleException start.")
         global no_of_errors_logged
         prev_error_ind = str(self.ErrorIndicator.get())
         new_error_ind = prev_error_ind + '!'
@@ -793,13 +795,36 @@ class Mainframe(tk.Frame):
         exception = "Unexpected exception:" + str(sys.exc_info())
         log_file.write("ERROR[" + now + "]:" +  exception + "\n")
         nownow = self.GetNow()
-        print(nownow, "logged error to file:", log_file_path)
+        self.DebugLog("Logged error to file: " + log_file_path)
         log_file.write(traceback.format_exc())
         log_file.write("Web page that caused the error:\n" +
                        error_page + "\n\n")
         log_file.close()
         no_of_errors_logged += 1
-        print("HandleException end.")
+        self.DebugLog("HandleException end.")
+
+    def DebugLog(self, debug_text):
+        global debugging
+        global current_date
+
+        if not debugging:
+            pass
+        else:
+            now = time.strftime("%Y-%m-%d %H:%M:%S GMT", time.gmtime())
+            date = time.strftime("%Y%m%d")
+            if current_date is None:
+                # Set current_date the first time
+                current_date = date
+
+            if current_date != date:
+                # Date change, remove yesterday's log file
+                SilentRemove("debug_" + current_date + ".log")
+                current_date = date
+
+            log = open("debug_" + current_date + ".log", 'a')
+            log.write("DEBUG[" + now + "]: " + debug_text + "\n")
+            log.close()
+
 
 class App(tk.Tk):
     def __init__(self):
