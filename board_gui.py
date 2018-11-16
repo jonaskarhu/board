@@ -96,7 +96,9 @@ def getColAttr(col):
     elif col == 1: return(30, 40)
     elif col == 2: return(6, 1)
     elif col == 3: return(6, 1)
-    elif col == 4: return(5, 1)
+    elif col == 4: return(6, 1)
+    elif col == 5: return(5, 1)
+    else:          return(5, 1)
 
 def getColAttrWeather():
     # returns (col_width, col_weight)
@@ -539,8 +541,6 @@ class Mainframe(tk.Frame):
                     self.img = createPhotoImage('bus_images/' + elem + '.png', self.night_mode)
                     self.vars[line][col].configure(image = self.img)
                     self.vars[line][col].image = self.img
-                elif col == 1:
-                    self.vars[line][col].set(elem)
                 else:
                     self.vars[line][col].set(elem)
                 col += 1
