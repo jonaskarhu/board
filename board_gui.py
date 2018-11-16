@@ -740,7 +740,7 @@ class Mainframe(tk.Frame):
                 (bus_stop, curr_time, print_tuple) = result
                 no_of_dests = len(print_tuple) - 1
                 if self.NrOfDests != no_of_dests:
-                    self.DebugLog(self.NrOfDests + " != " + no_of_dests + " -> Restart!")
+                    self.DebugLog(str(self.NrOfDests) + " != " + str(no_of_dests) + " -> Restart!")
                     self.Destroy()
                     self.after(1, self.Start)
                 else:
