@@ -55,6 +55,7 @@ forecast_hours       = 10
 ## Debugging
 debugging            = True
 current_date         = None
+first_start          = True
 
 ## Fault handling
 backoff_factor       = 1
@@ -169,8 +170,11 @@ class Mainframe(tk.Frame):
         # in this case the * an ** operators unpack the parameters
 
     def Start(self):
+        global first_start
+        if first_start:
+            print("Application running...")
+            first_start = False
         self.DebugLog("Starting application.")
-        print("Application running...")
 
         # Create the top frame, including bus stop and time, and an empty line
         self.BusStop = tk.StringVar()

@@ -21,7 +21,7 @@ def get_print_tuple():
         secret=secrets.get_secret())
 
     sodermalmsgatan_id = jp.location_name('Södermalmsgatan, Göteborg')[0]['id']
-    departure_board = jp.departureboard(sodermalmsgatan_id, time_span=180,
+    departure_board = jp.departureboard(sodermalmsgatan_id, time_span=99,
                                         max_departures_per_line=2)
     #raw=[]
     buses={}
