@@ -172,10 +172,13 @@ class Mainframe(tk.Frame):
         # in this case the * an ** operators unpack the parameters
 
     def Start(self):
+        global backoff_factor
+        global update_interval
         global first_start
         if first_start:
             print("Application running...")
             first_start = False
+        self.Destroy()
         self.DebugLog("Starting application.")
 
         # Create the top frame, including bus stop and time, and an empty line
@@ -257,8 +260,21 @@ class Mainframe(tk.Frame):
 
         # Get the print_tuple for the first time to determine how many lines
         # are needed, i.e. how many line frames to create
-        (bus_stop, curr_time, print_tuple) = self.getPrintTupleForGui(the_bus_stop)
-        self.NrOfDests = len(print_tuple) - 1
+        try:
+            result = self.getPrintTupleForGui(the_bus_stop)
+            (bus_stop, curr_time, print_tuple) = result
+            self.ErrorIndicator.set('')
+            self.NrOfDests = len(print_tuple) - 1
+        except KeyboardInterrupt:
+            raise
+        except:
+            self.DebugLog("Error in Västtrafik API, handle exception!")
+            self.BusStop.set("Error in API")
+            self.HandleException("Västtrafik API.")
+            backoff_time = backoff_factor * update_interval
+            #self.Destroy()
+            self.after(backoff_time, self.Start)
+            return
 
         # Create all lines and columns
         vars = []
@@ -528,9 +544,9 @@ class Mainframe(tk.Frame):
                 return smhi_tuple
 
     # Update widget field with new values in a print_tuple that looks like this:
-    # print_tuple = [('#', 'Destination', 'Avgår', 'Nästa', 'Läge')
-                   # ('25', 'Balltorp', '8', '18', 'A'),
-                   # ('52', 'Skogome', '3', '13', 'A'),
+    # print_tuple = [('#',  'Destination', 'Avgår', 'Nästa', 'Sedan', 'Läge')
+                   # ('25', 'Balltorp',    '8',     '18',    '28',    'A'),
+                   # ('52', 'Skogome',     '3',     '13',    '23',    'A'),
                    # ...]
     def UpdateFields(self, print_tuple):
         line = 0
@@ -745,7 +761,7 @@ class Mainframe(tk.Frame):
                 no_of_dests = len(print_tuple) - 1
                 if self.NrOfDests != no_of_dests:
                     self.DebugLog(str(self.NrOfDests) + " != " + str(no_of_dests) + " -> Restart!")
-                    self.Destroy()
+                    #self.Destroy()
                     self.after(1, self.Start)
                 else:
                     self.BusStop.set('Hållplats: ' + bus_stop)
@@ -759,8 +775,8 @@ class Mainframe(tk.Frame):
         except KeyboardInterrupt:
             raise
         except:
-            self.DebugLog("Error in bus page, handle exception!")
-            self.HandleException("Bus stop page.")
+            self.DebugLog("Error in Västtrafik API, handle exception!")
+            self.HandleException("Västtrafik API.")
             backoff_time = backoff_factor * update_interval
             if backoff_factor < 4:
                 backoff_factor *= 2
@@ -801,7 +817,7 @@ class Mainframe(tk.Frame):
         nownow = self.GetNow()
         self.DebugLog("Logged error to file: " + log_file_path)
         log_file.write(traceback.format_exc())
-        log_file.write("Web page that caused the error:\n" +
+        log_file.write("Web page/API that caused the error:\n" +
                        error_page + "\n\n")
         log_file.close()
         no_of_errors_logged += 1

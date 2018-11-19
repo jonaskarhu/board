@@ -19,8 +19,17 @@ def get_print_tuple():
     jp = vasttrafik_api.JourneyPlanner(
         key=secrets.get_key(),
         secret=secrets.get_secret())
-
-    sodermalmsgatan_id = jp.location_name('Södermalmsgatan, Göteborg')[0]['id']
+    try:
+        sodermalmsgatan = 'Södermalmsgatan, Göteborg'
+        stops = jp.location_name(sodermalmsgatan)
+        for stop in stops:
+            if stop['name'] == sodermalmsgatan:
+                sodermalmsgatan_id = stop['id']
+    except KeyboardInterrupt:
+        raise
+    except KeyError:
+        sodermalmsgatan_id = '9021014006630000'
+    #raise ValueError('test')
     departure_board = jp.departureboard(sodermalmsgatan_id, time_span=99,
                                         max_departures_per_line=3)
     #raw=[]
