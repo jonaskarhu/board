@@ -27,7 +27,7 @@ def get_print_tuple():
     jp = vasttrafik_api.JourneyPlanner(
         key=secrets.get_key(),
         secret=secrets.get_secret())
-    if sodermalmsgatan_id is None or time_to_fetch_id > fetch_id_every_x_times:
+    if sodermalmsgatan_id is None or time_to_fetch_id >= fetch_id_every_x_times:
         try:
             sodermalmsgatan = 'Södermalmsgatan, Göteborg'
             stops = jp.location_name(sodermalmsgatan)
@@ -40,8 +40,16 @@ def get_print_tuple():
         except KeyError:
             sodermalmsgatan_id = '9021014006630000'
     time_to_fetch_id += 1
-    departure_board = jp.departureboard(sodermalmsgatan_id, time_span=99,
-                                        max_departures_per_line=3)
+
+    try:
+        departure_board = jp.departureboard(sodermalmsgatan_id, time_span=99,
+                                            max_departures_per_line=3)
+    except KeyboardInterrupt:
+        raise
+    except:
+        time_to_fetch_id = fetch_id_every_x_times
+        raise
+
     #raw=[]
     buses={}
     for d in departure_board:
