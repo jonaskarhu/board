@@ -50,7 +50,6 @@ def get_print_tuple():
         time_to_fetch_id = fetch_id_every_x_times
         raise
 
-    #raw=[]
     buses={}
     for d in departure_board:
         is_realtime = False
@@ -61,7 +60,6 @@ def get_print_tuple():
             time = get_time_to_departure(d['time'])   # type(time): int
         except:
             raise
-        #raw.append((d['sname'], d['direction'], time, d['track'], is_realtime))
         bus_no = d['sname']
         destination = d['direction']
         bus = bus_no + ' ' + destination
@@ -157,10 +155,4 @@ def get_print_tuple():
         hour = '0' + hour
     if len(min) < 2:
         min = '0' + min
-    #print("RAW:")
-    #for r in raw:
-    #    print(r)
-    #print("OUTPUT:")
-    #for p in print_tuple:
-    #    print(p)
     return('Södermalmsgatan', hour + ":" + min, print_tuple)
