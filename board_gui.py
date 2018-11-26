@@ -225,7 +225,7 @@ class Mainframe(tk.Frame):
                                borderwidth = border_width,
                                relief = "solid",
                                foreground = text_color,
-                               width = 35,
+                               width = 40,
                                textvariable = text0)
             aLabel2 = tk.Label(self.TopFrame,
                                font = (text_font, text_size, 'bold'),
@@ -234,7 +234,7 @@ class Mainframe(tk.Frame):
                                borderwidth = border_width,
                                relief="solid",
                                foreground = text_color,
-                               width = 35,
+                               width = 25,
                                textvariable = text1)
             aLabel3 = tk.Label(self.TopFrame,
                                font = (text_font, text_size, 'bold'),
@@ -243,7 +243,7 @@ class Mainframe(tk.Frame):
                                borderwidth = border_width,
                                relief="solid",
                                foreground = text_color,
-                               width = 35,
+                               width = 40,
                                textvariable = text2)
             aLabel1.grid(row=n, column=0, sticky='w')
             aLabel2.grid(row=n, column=1)

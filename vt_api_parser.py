@@ -5,31 +5,41 @@ import vasttrafik_api
 import secrets
 import datetime
 
+# Global variables
+sodermalmsgatan_id = None
+fetch_id_every_x_times = 240 # Once every hr when fetch interval is 15 secs
+time_to_fetch_id = 0
+
 def get_time_to_departure(absolute_time):
     departure_hour = int(absolute_time[:2])
     departure_minute = int(absolute_time[3:])
     now = datetime.datetime.now()
     # TODO: Handle midnight more reasonably ;-)
     if 0 <= departure_hour <= 5 and 18 <= now.hour <= 23:
-        departure_hour = 24
+        departure_hour = 24 + departure_hour
     time_to_departure = 60*(departure_hour - now.hour) + departure_minute - now.minute
     return time_to_departure
 
 def get_print_tuple():
+    global sodermalmsgatan_id
+    global fetch_id_every_x_times
+    global time_to_fetch_id
     jp = vasttrafik_api.JourneyPlanner(
         key=secrets.get_key(),
         secret=secrets.get_secret())
-    try:
-        sodermalmsgatan = 'Södermalmsgatan, Göteborg'
-        stops = jp.location_name(sodermalmsgatan)
-        for stop in stops:
-            if stop['name'] == sodermalmsgatan:
-                sodermalmsgatan_id = stop['id']
-    except KeyboardInterrupt:
-        raise
-    except KeyError:
-        sodermalmsgatan_id = '9021014006630000'
-    #raise ValueError('test')
+    if sodermalmsgatan_id is None or time_to_fetch_id > fetch_id_every_x_times:
+        try:
+            sodermalmsgatan = 'Södermalmsgatan, Göteborg'
+            stops = jp.location_name(sodermalmsgatan)
+            for stop in stops:
+                if stop['name'] == sodermalmsgatan:
+                    sodermalmsgatan_id = stop['id']
+                    time_to_fetch_id = 0
+        except KeyboardInterrupt:
+            raise
+        except KeyError:
+            sodermalmsgatan_id = '9021014006630000'
+    time_to_fetch_id += 1
     departure_board = jp.departureboard(sodermalmsgatan_id, time_span=99,
                                         max_departures_per_line=3)
     #raw=[]
