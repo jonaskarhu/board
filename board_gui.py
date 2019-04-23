@@ -512,14 +512,17 @@ class Mainframe(tk.Frame):
         global forecast_hours
         json_content = page_getter.get_smhi_weather()
         now = datetime.datetime.now()
+        utc = datetime.datetime.utcnow()
         this_hour = now.hour
+        utc_hour = utc.hour
+        utc_diff = this_hour - utc_hour
         smhi_tuple = []
         found_first = False
         for item in json_content['timeSeries']:
             prognosis_time = item['validTime']
-            prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0])
+            prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0]) + utc_diff
             if (len(smhi_tuple) < forecast_hours) and\
-               ((prognosis_hr > this_hour) or\
+               ((prognosis_hr == this_hour + 1) or\
                 ((this_hour == 23) and (prognosis_hr == 0)) or\
                 found_first):
                 found_first = True
