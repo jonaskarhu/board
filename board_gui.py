@@ -35,6 +35,7 @@ lighter_grey           = "#626971"
 text_color_off_white   = "#F0F8FA"
 text_color_ferrari_red = "#FF2800"
 text_color_red_night   = "#971600"
+text_color_special_anno= "#FEEF98"
 background_grey_night  = "#000000"
 lighter_grey_night     = "#181818"
 text_color_night       = "#646464"
@@ -186,6 +187,7 @@ class Mainframe(tk.Frame):
         self.CurrTime = tk.StringVar()
         self.CurrTemp = tk.StringVar()
         self.ErrorIndicator = tk.StringVar()
+        self.SpecialAnnouncement = tk.StringVar()
         self.NrOfErrorsLogged = tk.StringVar()
 
         dark_frames = []
@@ -193,6 +195,7 @@ class Mainframe(tk.Frame):
         light_frames = []
         light_labels = []
         red_labels = []
+        spec_labels = []
 
         self.TopFrame = tk.Frame(self,
                                  bg = background_grey,
@@ -212,12 +215,22 @@ class Mainframe(tk.Frame):
                 text0 = self.BusStop
                 text1 = self.CurrTime
                 text2 = self.CurrTemp
+                text_color_special = text_color_off_white
                 text_color = text_color_off_white
+                width0 = 40
+                width1 = 25
+                width2 = 40
             else:
                 text0 = self.ErrorIndicator
-                text1 = ""
+                text1 = self.SpecialAnnouncement
+                text_color_special = text_color_special_anno
                 text2 = self.NrOfErrorsLogged
                 text_color = text_color_ferrari_red
+                # not satisfied with below values, seem to override the values above,
+                # seem to work though at dev screen
+                width0 = 35
+                width1 = 35
+                width2 = 35
             aLabel1 = tk.Label(self.TopFrame,
                                font = (text_font, text_size, 'bold'),
                                anchor = 'w',
@@ -225,7 +238,7 @@ class Mainframe(tk.Frame):
                                borderwidth = border_width,
                                relief = "solid",
                                foreground = text_color,
-                               width = 40,
+                               width = width0,
                                textvariable = text0)
             aLabel2 = tk.Label(self.TopFrame,
                                font = (text_font, text_size, 'bold'),
@@ -233,8 +246,8 @@ class Mainframe(tk.Frame):
                                bg = background_grey,
                                borderwidth = border_width,
                                relief="solid",
-                               foreground = text_color,
-                               width = 25,
+                               foreground = text_color_special,
+                               width = width1,
                                textvariable = text1)
             aLabel3 = tk.Label(self.TopFrame,
                                font = (text_font, text_size, 'bold'),
@@ -243,7 +256,7 @@ class Mainframe(tk.Frame):
                                borderwidth = border_width,
                                relief="solid",
                                foreground = text_color,
-                               width = 40,
+                               width = width2,
                                textvariable = text2)
             aLabel1.grid(row=n, column=0, sticky='w')
             aLabel2.grid(row=n, column=1)
@@ -254,7 +267,7 @@ class Mainframe(tk.Frame):
                 dark_labels.append(aLabel3)
             else:
                 red_labels.append(aLabel1)
-                red_labels.append(aLabel2)
+                spec_labels.append(aLabel2)
                 red_labels.append(aLabel3)
             n += 1
 
@@ -264,6 +277,7 @@ class Mainframe(tk.Frame):
             result = self.getPrintTupleForGui(the_bus_stop)
             (bus_stop, curr_time, print_tuple) = result
             self.ErrorIndicator.set('')
+            self.SpecialAnnouncement.set('')
             self.NrOfDests = len(print_tuple) - 1
         except KeyboardInterrupt:
             raise
@@ -493,6 +507,7 @@ class Mainframe(tk.Frame):
         self.light_frames = light_frames
         self.light_labels = light_labels
         self.red_labels = red_labels
+        self.spec_labels = spec_labels
         self.night_mode = False
         self.daytime = True
 
@@ -611,6 +626,9 @@ class Mainframe(tk.Frame):
         for label in self.red_labels:
             label.config(bg = background_color,
                          foreground = text_color_red)
+        for label in self.spec_labels:
+            label.config(bg = background_color,
+                         foreground = text_color_special_anno)
 
     def CheckAndUpdateSeasonalColors(self):
         now = datetime.datetime.now()
@@ -698,12 +716,17 @@ class Mainframe(tk.Frame):
         time = this_hour + ':' + this_minute
         return time
 
+    def SetSpecialAnnouncement(self, announcement_text, day_of_occurence):
+        days_to = day_of_occurence - datetime.date.today()
+        self.SpecialAnnouncement.set(announcement_text + str(days_to.days))
+
     # Loop that fetches all fields that continuously shall be updated
     def Update(self):
         global no_of_errors_logged
         global display_log_errors
         global backoff_factor
         self.ErrorIndicator.set('!')
+        self.SetSpecialAnnouncement('Days to vacaaaay: ', datetime.date(2019,7,5))
         self.update_idletasks()
 
         # Init season colors
