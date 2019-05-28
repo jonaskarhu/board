@@ -535,7 +535,7 @@ class Mainframe(tk.Frame):
         found_first = False
         for item in json_content['timeSeries']:
             prognosis_time = item['validTime']
-            prognosis_hr = int(re.findall('T([0-9]{2}):', prognosis_time)[0]) + utc_diff
+            prognosis_hr = (int(re.findall('T([0-9]{2}):', prognosis_time)[0]) + utc_diff) % 24
             if (len(smhi_tuple) < forecast_hours) and\
                ((prognosis_hr == this_hour + 1) or\
                 ((this_hour == 23) and (prognosis_hr == 0)) or\
