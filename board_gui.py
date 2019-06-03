@@ -29,7 +29,7 @@ winter_foreground      = "#9fbad8"
 spring_background      = "#a6567d"
 spring_foreground      = "#c188a4"
 summer_background      = "#2b8100"
-summer_foreground      = "#349a00"
+summer_foreground      = "#3FB300"
 background_grey        = "#3C4550"
 lighter_grey           = "#626971"
 text_color_off_white   = "#F0F8FA"
@@ -718,7 +718,10 @@ class Mainframe(tk.Frame):
 
     def SetSpecialAnnouncement(self, announcement_text, day_of_occurence):
         days_to = day_of_occurence - datetime.date.today()
-        self.SpecialAnnouncement.set(announcement_text + str(days_to.days))
+        if days_to.days < 0:
+            self.SpecialAnnouncement.set('')
+        else:
+            self.SpecialAnnouncement.set(announcement_text + str(days_to.days))
 
     # Loop that fetches all fields that continuously shall be updated
     def Update(self):
