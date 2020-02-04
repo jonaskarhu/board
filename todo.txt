@@ -1,12 +1,6 @@
 TODO board.py:
-- Implement support for "Fler Avgångar".    Done
-- Implement support for any hpl.            Done
-- error.log only three latest errors.       Done
-- Try to remove all char enc/dec            Done
-- Move Temp forecast to own module          Done
-- Fix print alignment for temp forecast     Done
-- Fixa Vagnläge...
-- Do a GUI                                  Done
-- Fix error handling in GUI, i.e. Error log Done
-- Get a github account and upload the code. Done
-- Improved fault handling (low prio)
+- Move static vars to config.ini
+- Implement support for any hpl
+- Add seasonal colors on/off in config.ini
+- Add night mode on/off in config.ini
+

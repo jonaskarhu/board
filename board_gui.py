@@ -50,7 +50,6 @@ night_mode_interval  = 90000  # milliseconds -> 1 min 30 sec
 weather_interval     = 666000 # milliseconds -> 11 min 6 sec
 border_width         = 0 # set to 2 to debug
 border_width_weather = 0 # set to 2 to debug
-the_bus_stop         = 'Södermalmsgatan'
 forecast_hours       = 10
 
 ## Debugging
@@ -274,7 +273,7 @@ class Mainframe(tk.Frame):
         # Get the print_tuple for the first time to determine how many lines
         # are needed, i.e. how many line frames to create
         try:
-            result = self.getPrintTupleForGui(the_bus_stop)
+            result = self.getPrintTupleForGui()
             (bus_stop, curr_time, print_tuple) = result
             self.ErrorIndicator.set('')
             self.SpecialAnnouncement.set('')
@@ -780,7 +779,7 @@ class Mainframe(tk.Frame):
 
         # Update Bus times
         try:
-            result = self.getPrintTupleForGui(the_bus_stop)
+            result = self.getPrintTupleForGui()
             if result == None:
                 # If there is an exception, 'None' will be returned and it needs
                 # to be handled, just pass since the exception will callback here
@@ -822,7 +821,7 @@ class Mainframe(tk.Frame):
         self.DebugLog("Temperature updated.")
         return temp
 
-    def getPrintTupleForGui(self, bus_stop):
+    def getPrintTupleForGui(self):
         global backoff_factor
         (stop,
          curr_time,
