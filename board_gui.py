@@ -82,13 +82,13 @@ def getSeason(int_month):
 
 def getLogfile(no_of_errors_logged, no_of_errors_to_save):
     if no_of_errors_logged >= no_of_errors_to_save:
-        error_log_to_remove = "error_" +\
+        error_log_to_remove = run_dir + "/error_" +\
                               str(no_of_errors_logged + 1
                                   - no_of_errors_to_save) +\
                               ".log"
         if os.path.exists(error_log_to_remove):
             os.remove(error_log_to_remove)
-    return "error_" + str(no_of_errors_logged + 1) + ".log"
+    return run_dir + "/error_" + str(no_of_errors_logged + 1) + ".log"
 
 def getColAttr(col):
     # returns (col_width, col_weight)
@@ -106,7 +106,7 @@ def getColAttrWeather():
 
 def createPhotoImage(path, is_night):
     try:
-        img = Image.open(path)
+        img = Image.open(run_dir + "/" + path)
         if img.mode is not "RGBA":
             img = img.convert("RGBA")
         if is_night:
@@ -115,7 +115,7 @@ def createPhotoImage(path, is_night):
        	    elif path[:3] == "wea":
                 img = ImageEnhance.Brightness(img).enhance(0.4)
     except FileNotFoundError:
-        img = Image.open('bus_images/unknown.png')
+        img = Image.open(run_dir + '/bus_images/unknown.png')
     img.thumbnail((text_size*4.6, 10000), Image.ANTIALIAS)
     return ImageTk.PhotoImage(img)
 
@@ -164,7 +164,7 @@ class Mainframe(tk.Frame):
     def __init__(self, master, *args, **kwargs):
         # *args packs positional arguments into tuple args
         # **kwargs packs keyword arguments into dict kwargs
-        
+
         # initialise base class
         tk.Frame.__init__(self, master, *args, **kwargs)
         self.master = master
@@ -312,7 +312,7 @@ class Mainframe(tk.Frame):
                                                    # # dest next nextnext (pos)
                 if col == 0:
                     # special case for having the image of the bus line
-                    img = Image.open('bus_images/unknown.png')
+                    img = Image.open(run_dir + '/bus_images/unknown.png')
                     img.thumbnail((text_size*4.6, 10000), Image.ANTIALIAS)
                     self.img = ImageTk.PhotoImage(img)
                     self.imgLabel = tk.Label(self.LineFrame,
@@ -362,7 +362,7 @@ class Mainframe(tk.Frame):
                                              relief = "solid")
                 self.WeatherFrame.pack(fill='x')
                 dark_frames.append(self.WeatherFrame)
-                
+
                 # Prognos (SMHI)
                 self.Head = tk.Label(self.WeatherFrame,
                                      font = (text_font, text_size_weather, 'bold'),
@@ -373,7 +373,7 @@ class Mainframe(tk.Frame):
                                      foreground = text_color_off_white,
                                      text = display)
                 # Small sun icon
-                sun_1 = Image.open('weather_icons/clear.png')
+                sun_1 = Image.open(run_dir + '/weather_icons/clear.png')
                 sun_1.thumbnail((text_size_weather*2.6, 10000), Image.ANTIALIAS)
                 self.sun_1 = ImageTk.PhotoImage(sun_1)
                 self.sun_1Label = tk.Label(self.WeatherFrame,
@@ -393,7 +393,7 @@ class Mainframe(tk.Frame):
                                       foreground = text_color_off_white,
                                       textvariable = self.sun_up)
                 # Small sun icon
-                sun_2 = Image.open('weather_icons/clear.png')
+                sun_2 = Image.open(run_dir + '/weather_icons/clear.png')
                 sun_2.thumbnail((text_size_weather*2.6, 10000), Image.ANTIALIAS)
                 self.sun_2 = ImageTk.PhotoImage(sun_2)
                 self.sun_2Label = tk.Label(self.WeatherFrame,
@@ -466,7 +466,7 @@ class Mainframe(tk.Frame):
             for col in range(len(smhi_tuple)):
                 (col_width, col_weight) = getColAttrWeather()
                 if (row == 1):
-                    img = Image.open('weather_icons/unknown.png')
+                    img = Image.open(run_dir + '/weather_icons/unknown.png')
                     img.thumbnail((text_size_weather*4.6, 10000), Image.ANTIALIAS)
                     self.img = ImageTk.PhotoImage(img)
                     self.imgLabel = tk.Label(self.WeatherFrame,
@@ -869,7 +869,7 @@ class Mainframe(tk.Frame):
                 SilentRemove("debug_" + current_date + ".log")
                 current_date = date
 
-            log = open("debug_" + current_date + ".log", 'a')
+            log = open(run_dir + "/debug_" + current_date + ".log", 'a')
             log.write("DEBUG[" + now + "]: " + debug_text + "\n")
             log.close()
 
@@ -889,5 +889,7 @@ class App(tk.Tk):
         Mainframe(self).pack(fill='x', padx = 1*text_size, pady = 1*text_size)
 
         self.mainloop()
+
+run_dir = os.path.dirname(sys.argv[0])
 
 App()
