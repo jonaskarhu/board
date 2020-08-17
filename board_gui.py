@@ -41,6 +41,7 @@ lighter_grey_night     = "#181818"
 text_color_night       = "#646464"
 text_font              = 'DejaVu Sans'
 text_size              = 23
+text_size_dests        = 18
 text_size_weather      = 17#18
 screen_res             = '1920x1080'
 
@@ -297,6 +298,8 @@ class Mainframe(tk.Frame):
             if line%2 == 0: bg_color = background_grey
             else:           bg_color = lighter_grey
 
+            text_size_destinations = text_size_dests
+
             self.LineFrame = tk.Frame(self,
                                       bg = bg_color,
                                       borderwidth = border_width,
@@ -313,7 +316,7 @@ class Mainframe(tk.Frame):
                 if col == 0:
                     # special case for having the image of the bus line
                     img = Image.open(run_dir + '/bus_images/unknown.png')
-                    img.thumbnail((text_size*4.6, 10000), Image.ANTIALIAS)
+                    img.thumbnail((text_size_destinations*4.6, 10000), Image.ANTIALIAS)
                     self.img = ImageTk.PhotoImage(img)
                     self.imgLabel = tk.Label(self.LineFrame,
                                              borderwidth = border_width,
@@ -321,8 +324,8 @@ class Mainframe(tk.Frame):
                                              image = self.img,
                                              bg = bg_color)
                     self.imgLabel.grid(row=0, column=col, sticky="w",
-                                       padx=(text_size*0.40, text_size*0.40),
-                                       pady=(text_size*0.25, text_size*0.25))
+                                       padx=(text_size_destinations*0.40, text_size_destinations*0.40),
+                                       pady=(text_size_destinations*0.25, text_size_destinations*0.25))
                     self.imgLabel.image = self.img
                     self.LineFrame.grid_columnconfigure(col, weight = 0)
                     row_tuple += (self.imgLabel,)
@@ -332,7 +335,7 @@ class Mainframe(tk.Frame):
                     var = tk.StringVar()
                     (col_width, col_weight) = getColAttr(col)
                     self.Col = tk.Label(self.LineFrame,
-                                        font = (text_font, text_size, 'bold'),
+                                        font = (text_font, text_size_destinations, 'bold'),
                                         anchor = 'w',
                                         borderwidth = border_width,
                                         relief = "solid",
