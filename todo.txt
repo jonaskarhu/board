@@ -3,4 +3,5 @@ TODO board.py:
 - Implement support for any hpl
 - Add seasonal colors on/off in config.ini
 - Add night mode on/off in config.ini
-
+- Remove bus line images and replace with coloured text box with colors from Västtrafik's API
+- Add variable text size, now it overflows when too many departures
