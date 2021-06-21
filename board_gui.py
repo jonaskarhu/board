@@ -818,10 +818,11 @@ class Mainframe(tk.Frame):
             widget.destroy()
 
     def GetCurrentTemp(self):
-        url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
-        weather_page = page_getter.get_page_as_string(url_temp)
-        temp = weather_parser.get_curr_temp(weather_page)
-        self.DebugLog("Temperature updated.")
+        #url_temp = "https://www.temperatur.nu/toltorpsdalen.html"
+        #weather_page = page_getter.get_page_as_string(url_temp)
+        #temp = weather_parser.get_curr_temp(weather_page)
+        #self.DebugLog("Temperature updated.")
+        temp = '-'
         return temp
 
     def getPrintTupleForGui(self):
