@@ -519,6 +519,7 @@ class Mainframe(tk.Frame):
         self.WeatherDelay = 0
         self.NightModeInterval = night_mode_interval
         self.NightModeDelay = 0
+        self.CurrentTemp = '-'
 
         # Initialize season
         self.Season = ""
@@ -752,11 +753,10 @@ class Mainframe(tk.Frame):
             try:
                 # Update Temperature
                 temperature = self.GetCurrentTemp()
-                if temperature == None:
-                    # TODO: Raise some kind of flag in case we don't get curr temp
-                    pass
-                else:
+                if temperature is not None:
                     self.CurrentTemp = temperature
+                else:
+                    self.CurrentTemp = '-'
             except KeyboardInterrupt:
                 raise
             except:
@@ -822,7 +822,7 @@ class Mainframe(tk.Frame):
         #weather_page = page_getter.get_page_as_string(url_temp)
         #temp = weather_parser.get_curr_temp(weather_page)
         #self.DebugLog("Temperature updated.")
-        temp = '-'
+        temp = None
         return temp
 
     def getPrintTupleForGui(self):
