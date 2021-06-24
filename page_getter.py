@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # coding=utf-8
-
+import json
 import requests
 import re
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -15,6 +15,28 @@ def replace_utf8_chars(s):
             .replace('%c3%a9','é')\
             .replace('%c3%a6','æ')\
             .replace('+',' ')
+
+def get_temperatur_nu_temp():
+    temperatur_nu_endpoint = 'http://api.temperatur.nu/tnu_1.17.php'
+    params = {
+        'lat' : '57.677739',
+        'lon' : '11.971323',
+        'cli' : 'karhu_app'
+    }
+    response = requests.get(temperatur_nu_endpoint, params=params)
+    #response = '{"full_exec_time":0.01783299446105957,"title":"Temperatur.nu API 1.17","client":"unsigned","stations":[{"title":"Göteborg/Högsbo","id":"hogsbo","temp":"15.3","dist":"2.5"}]}'
+    json_obj = json.loads(response.text)
+    temp = '-'
+    try:
+        for station in json_obj['stations']:
+            try:
+                temp = str(station['temp']).replace('.', ',')
+                break
+            except:
+                pass
+    except:
+        pass
+    return temp
 
 def get_page_as_string(url):
     page_obj = requests.get(url)

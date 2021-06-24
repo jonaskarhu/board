@@ -822,7 +822,7 @@ class Mainframe(tk.Frame):
         #weather_page = page_getter.get_page_as_string(url_temp)
         #temp = weather_parser.get_curr_temp(weather_page)
         #self.DebugLog("Temperature updated.")
-        temp = None
+        temp = page_getter.get_temperatur_nu_temp()
         return temp
 
     def getPrintTupleForGui(self):
